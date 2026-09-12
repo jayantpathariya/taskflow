@@ -20,6 +20,10 @@ export interface ActiveTimerResponse {
   activeTimer: ActiveTimerInfo | null;
 }
 
+export interface TimeLogResponse {
+  timeLog: ITimeLog;
+}
+
 export interface TimeLogsListResponse {
   timeLogs: ITimeLog[];
   totalDurationSeconds: number;
