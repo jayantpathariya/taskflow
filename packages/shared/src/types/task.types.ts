@@ -14,3 +14,8 @@ export interface ITask {
 export interface TaskResponse {
   task: ITask;
 }
+
+export interface TasksListResponse {
+  tasks: ITask[];
+  total: number;
+}

@@ -1,14 +1,24 @@
 import { Router } from "express";
-import { createTask } from "../controllers/task.controller.js";
+import {
+  getTasks,
+  getTaskById,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../controllers/task.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { validateBody } from "../middlewares/validate.middleware.js";
-import { createTaskSchema } from "@taskflow/shared";
+import { createTaskSchema, updateTaskSchema } from "@taskflow/shared";
 
 const router = Router();
 
 // Protect all task routes
 router.use(authenticate);
 
+router.get("/", getTasks);
 router.post("/", validateBody(createTaskSchema), createTask);
+router.get("/:id", getTaskById);
+router.put("/:id", validateBody(updateTaskSchema), updateTask);
+router.delete("/:id", deleteTask);
 
 export default router;
