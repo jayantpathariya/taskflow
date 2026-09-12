@@ -8,6 +8,11 @@ import {
   clearAuthCookies,
   REFRESH_TOKEN_COOKIE,
 } from "../utils/cookie.util.js";
+import {
+  storeRefreshToken,
+  getStoredRefreshToken,
+  removeRefreshToken,
+} from "../services/token.service.js";
 import type { RegisterInput, LoginInput } from "@taskflow/shared";
 
 export const register = async (
@@ -29,15 +34,14 @@ export const register = async (
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const user = new User({
+    const user = await User.create({
       name,
       email,
       passwordHash,
     });
 
     const tokens = generateTokens(user._id.toString());
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
+    await storeRefreshToken(user._id.toString(), tokens.refreshToken);
 
     setAuthCookies(res, tokens);
 
@@ -74,8 +78,7 @@ export const login = async (
     }
 
     const tokens = generateTokens(user._id.toString());
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
+    await storeRefreshToken(user._id.toString(), tokens.refreshToken);
 
     setAuthCookies(res, tokens);
 
@@ -113,8 +116,8 @@ export const refresh = async (
       return;
     }
 
-    const user = await User.findById(payload.userId);
-    if (!user || user.refreshToken !== refreshToken) {
+    const storedToken = await getStoredRefreshToken(payload.userId);
+    if (!storedToken || storedToken !== refreshToken) {
       clearAuthCookies(res);
       res.status(status.UNAUTHORIZED).json({
         error: "Refresh token is invalid or has been revoked",
@@ -122,9 +125,8 @@ export const refresh = async (
       return;
     }
 
-    const tokens = generateTokens(user._id.toString());
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
+    const tokens = generateTokens(payload.userId);
+    await storeRefreshToken(payload.userId, tokens.refreshToken);
 
     setAuthCookies(res, tokens);
 
@@ -145,10 +147,10 @@ export const logout = async (
     const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE];
 
     if (refreshToken) {
-      await User.findOneAndUpdate(
-        { refreshToken },
-        { $set: { refreshToken: null } }
-      );
+      try {
+        const payload = verifyRefreshToken(refreshToken);
+        await removeRefreshToken(payload.userId);
+      } catch {}
     }
 
     clearAuthCookies(res);

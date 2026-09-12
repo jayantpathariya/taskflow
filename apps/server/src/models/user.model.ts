@@ -2,9 +2,9 @@ import { Schema, model, type Document } from "mongoose";
 import type { IUser } from "@taskflow/shared";
 
 export interface IUserDocument
-  extends Document, Omit<IUser, "id" | "createdAt" | "updatedAt"> {
+  extends Document,
+    Omit<IUser, "id" | "createdAt" | "updatedAt"> {
   passwordHash: string;
-  refreshToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,10 +27,6 @@ const userSchema = new Schema<IUserDocument>(
     passwordHash: {
       type: String,
       required: true,
-    },
-    refreshToken: {
-      type: String,
-      default: null,
     },
   },
   {

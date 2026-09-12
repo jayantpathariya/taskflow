@@ -10,6 +10,17 @@ services:
     environment:
       MONGO_INITDB_DATABASE: taskflow
 
+  redis:
+    image: redis:alpine
+    container_name: taskflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   mongo_data:
+    driver: local
+  redis_data:
     driver: local
