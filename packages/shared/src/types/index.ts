@@ -14,10 +14,8 @@ export interface AuthTokens {
 
 export interface AuthResponse {
   user: IUser;
-  tokens: AuthTokens;
 }
 
-export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken: string;
+export interface MessageResponse {
+  message: string;
 }
