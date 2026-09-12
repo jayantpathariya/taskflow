@@ -10,3 +10,7 @@ export interface ITask {
   updatedAt: string;
   totalTimeSpentSeconds?: number;
 }
+
+export interface TaskResponse {
+  task: ITask;
+}
