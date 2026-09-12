@@ -7,7 +7,17 @@ export interface IUser {
   updatedAt: string;
 }
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface AuthResponse {
   user: IUser;
-  token: string;
+  tokens: AuthTokens;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
 }
