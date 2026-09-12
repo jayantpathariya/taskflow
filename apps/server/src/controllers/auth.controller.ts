@@ -162,3 +162,24 @@ export const logout = async (
     next(error);
   }
 };
+
+export const getMe = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(status.UNAUTHORIZED).json({
+        error: "Not authenticated",
+      });
+      return;
+    }
+
+    res.status(status.OK).json({
+      user: req.user.toJSON(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
