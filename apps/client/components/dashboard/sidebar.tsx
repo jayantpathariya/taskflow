@@ -136,42 +136,10 @@ export function Sidebar({
           </Button>
         </div>
 
-        {/* Navigation Sections with internal scrolling if needed */}
+        {/* Navigation Sections */}
         <div className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-          {/* Insights as first section */}
+          {/* 1. Task Views Section (First) */}
           <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Overview
-          </div>
-          <Link
-            href="/insights"
-            onClick={onCloseMobile}
-            className={
-              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
-              (isInsights
-                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
-            }
-          >
-            <BarChart3 className="size-4" />
-            <span>Insights</span>
-          </Link>
-
-          <Link
-            href="/time-logs"
-            onClick={onCloseMobile}
-            className={
-              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
-              (isTimeLogs
-                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
-            }
-          >
-            <History className="size-4" />
-            <span>Time Logs</span>
-          </Link>
-
-          {/* Task Views Section */}
-          <div className="pt-4 pb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Task Views
           </div>
           {navItems.map((item) => {
@@ -205,6 +173,38 @@ export function Sidebar({
               </Link>
             );
           })}
+
+          {/* 2. Overview Section (Below Task Views) */}
+          <div className="pt-4 pb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Overview
+          </div>
+          <Link
+            href="/insights"
+            onClick={onCloseMobile}
+            className={
+              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
+              (isInsights
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
+            }
+          >
+            <BarChart3 className="size-4" />
+            <span>Insights</span>
+          </Link>
+
+          <Link
+            href="/time-logs"
+            onClick={onCloseMobile}
+            className={
+              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
+              (isTimeLogs
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
+            }
+          >
+            <History className="size-4" />
+            <span>Time Logs</span>
+          </Link>
         </div>
 
         {/* User Profile Footer */}

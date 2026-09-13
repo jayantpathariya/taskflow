@@ -14,6 +14,8 @@ import {
   Calendar,
   Layers,
   History,
+  BarChart2,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 
 export function DailyAnalytics() {
@@ -95,6 +97,22 @@ export function DailyAnalytics() {
   ];
 
   const tasksWorkedOn = analytics?.tasksWorkedOn || [];
+  const totalSeconds = analytics?.totalTimeTrackedSeconds || 0;
+
+  // Max duration for scaling the bars relative to highest task
+  const maxTaskDuration = Math.max(
+    ...tasksWorkedOn.map((t) => t.durationSeconds),
+    1
+  );
+
+  const totalTasks =
+    (analytics?.completedTasksCount || 0) +
+    (analytics?.inProgressTasksCount || 0) +
+    (analytics?.pendingTasksCount || 0);
+
+  const completedPct = totalTasks > 0 ? Math.round(((analytics?.completedTasksCount || 0) / totalTasks) * 100) : 0;
+  const inProgressPct = totalTasks > 0 ? Math.round(((analytics?.inProgressTasksCount || 0) / totalTasks) * 100) : 0;
+  const pendingPct = totalTasks > 0 ? Math.round(((analytics?.pendingTasksCount || 0) / totalTasks) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -109,7 +127,7 @@ export function DailyAnalytics() {
             Today's Performance Overview
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Real-time breakdown of time logged and workflow completion
+            Real-time breakdown of time logged, task focus distribution, and workflow completion
           </p>
         </div>
 
@@ -159,7 +177,155 @@ export function DailyAnalytics() {
         })}
       </div>
 
-      {/* Tasks Worked On Breakdown */}
+      {/* Visual Productivity Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Chart 1: Focus Time Allocation per Task (Horizontal Bar Chart) */}
+        <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart2 className="size-4 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Task Focus Distribution
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Time invested per task today
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-mono font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+              Total: {formatTotalTime(totalSeconds)}
+            </span>
+          </div>
+
+          {tasksWorkedOn.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+              <Layers className="size-8 stroke-1 text-muted-foreground mb-2" />
+              <p className="text-xs font-medium">No task focus logged today.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Start a timer on any task to visualize focus allocation here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3.5 pt-2">
+              {tasksWorkedOn.map((t) => {
+                const percentOfMax = Math.round((t.durationSeconds / maxTaskDuration) * 100);
+                const percentOfTotal = totalSeconds > 0 ? Math.round((t.durationSeconds / totalSeconds) * 100) : 0;
+
+                return (
+                  <div key={t.taskId} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-foreground truncate max-w-[200px] sm:max-w-[280px]" title={t.title}>
+                        {t.title}
+                      </span>
+                      <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground shrink-0">
+                        <span className="font-semibold text-foreground">
+                          {formatTotalTime(t.durationSeconds)}
+                        </span>
+                        <span className="text-muted-foreground/70">({percentOfTotal}%)</span>
+                      </div>
+                    </div>
+
+                    {/* Progress Track & Animated Bar */}
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted/60 p-0.5">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                        style={{ width: percentOfMax + "%" }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Chart 2: Workflow Status Breakdown (Stacked Proportion Bar & Breakdown) */}
+        <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-5 space-y-4 flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <PieChartIcon className="size-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Workflow Status Breakdown
+              </h3>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Overall completion progress across {totalTasks} total tasks
+            </p>
+          </div>
+
+          {/* Segmented Progress Bar */}
+          <div className="space-y-2 py-2">
+            <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-muted/60 p-0.5 gap-1">
+              {completedPct > 0 && (
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                  style={{ width: completedPct + "%" }}
+                  title={'Completed: ' + completedPct + '%'}
+                />
+              )}
+              {inProgressPct > 0 && (
+                <div
+                  className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                  style={{ width: inProgressPct + "%" }}
+                  title={'In Progress: ' + inProgressPct + '%'}
+                />
+              )}
+              {pendingPct > 0 && (
+                <div
+                  className="h-full rounded-full bg-muted-foreground/40 transition-all duration-500"
+                  style={{ width: pendingPct + "%" }}
+                  title={'Pending: ' + pendingPct + '%'}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium pt-1">
+              <span>0%</span>
+              <span className="font-semibold text-foreground">{completedPct}% Completed</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* Detailed Status Breakdown Rows */}
+          <div className="space-y-2 pt-2 border-t border-border/60">
+            <div className="flex items-center justify-between text-xs py-1">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-emerald-500" />
+                <span className="text-muted-foreground">Completed</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <span className="font-semibold text-foreground">{analytics?.completedTasksCount || 0}</span>
+                <span className="text-muted-foreground/70">({completedPct}%)</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs py-1">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-amber-500" />
+                <span className="text-muted-foreground">In Progress</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <span className="font-semibold text-foreground">{analytics?.inProgressTasksCount || 0}</span>
+                <span className="text-muted-foreground/70">({inProgressPct}%)</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs py-1">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-muted-foreground/50" />
+                <span className="text-muted-foreground">Pending</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <span className="font-semibold text-foreground">{analytics?.pendingTasksCount || 0}</span>
+                <span className="text-muted-foreground/70">({pendingPct}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks Worked On Breakdown List */}
       <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
