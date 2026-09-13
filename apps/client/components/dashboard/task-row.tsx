@@ -1,10 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ITask, TaskStatus } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Play,
   Square,
@@ -15,6 +24,7 @@ import {
   CheckCircle2,
   CircleDashed,
   Timer,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +42,7 @@ interface TaskRowProps {
 
 export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
   const queryClient = useQueryClient();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const startTimerMutation = useMutation({
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/start`),
@@ -252,7 +263,7 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => deleteTaskMutation.mutate()}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="gap-2 text-destructive focus:text-destructive"
             >
               <Trash2 className="size-3.5" />
@@ -260,6 +271,47 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete &ldquo;{task.title}&rdquo;? This action cannot be undone and will permanently remove all associated time logs.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0 mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={deleteTaskMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  deleteTaskMutation.mutate(undefined, {
+                    onSuccess: () => setIsDeleteDialogOpen(false),
+                  });
+                }}
+                disabled={deleteTaskMutation.isPending}
+              >
+                {deleteTaskMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
