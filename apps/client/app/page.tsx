@@ -1,69 +1,155 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/providers/auth-provider";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import type { ITask, TasksListResponse } from "@taskflow/shared";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import { TaskList } from "@/components/dashboard/task-list";
+import { Button } from "@/components/ui/button";
+import { Menu, Loader2, Sparkles, Clock } from "lucide-react";
+
+interface ActiveTimerResponse {
+  timer: {
+    id: string;
+    taskId: string;
+    startTime: string;
+  } | null;
+}
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  const [currentFilter, setCurrentFilter] = useState("ALL");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<ITask | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, isLoading, router]);
+
+  // Fetch tasks to calculate counts
+  const { data: tasksData } = useQuery<TasksListResponse>({
+    queryKey: ["tasks"],
+    queryFn: async () => {
+      const res = await apiClient.get<TasksListResponse>("/tasks");
+      return res.data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch active timer for top indicator
+  const { data: timerData } = useQuery<ActiveTimerResponse>({
+    queryKey: ["timer", "active"],
+    queryFn: async () => {
+      const res = await apiClient.get<ActiveTimerResponse>("/timer/active");
+      return res.data;
+    },
+    enabled: !!user,
+    refetchInterval: 5000,
+  });
+
+  const taskCounts = useMemo(() => {
+    const tasks = tasksData?.tasks || [];
+    return {
+      all: tasks.length,
+      pending: tasks.filter((t) => t.status === "PENDING").length,
+      inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
+      completed: tasks.filter((t) => t.status === "COMPLETED").length,
+    };
+  }, [tasksData?.tasks]);
+
+  const activeTask = useMemo(() => {
+    if (!timerData?.timer?.taskId || !tasksData?.tasks) return null;
+    return tasksData.tasks.find((t) => t.id === timerData.timer?.taskId);
+  }, [timerData?.timer?.taskId, tasksData?.tasks]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const handleOpenCreate = () => {
+    setTaskToEdit(null);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar navigation */}
+      <Sidebar
+        currentFilter={currentFilter}
+        onFilterChange={setCurrentFilter}
+        onNewTask={handleOpenCreate}
+        taskCounts={taskCounts}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden text-muted-foreground hover:text-foreground"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <Menu className="size-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground text-sm hidden sm:inline">
+                Workspace
+              </span>
+              <span className="text-muted-foreground hidden sm:inline">/</span>
+              <span className="text-sm font-medium text-foreground">
+                {currentFilter === "ALL"
+                  ? "All Tasks"
+                  : currentFilter === "PENDING"
+                  ? "Pending"
+                  : currentFilter === "IN_PROGRESS"
+                  ? "In Progress"
+                  : "Completed"}
+              </span>
+            </div>
+          </div>
+
+          {/* Active Timer Indicator / Status */}
+          {activeTask && (
+            <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <span className="size-2 rounded-full bg-primary animate-ping" />
+              <Clock className="size-3.5" />
+              <span className="hidden sm:inline">Recording:</span>
+              <span className="font-semibold truncate max-w-[140px]">
+                {activeTask.title}
+              </span>
+            </div>
+          )}
+        </header>
+
+        {/* Main Content View */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto">
+          <TaskList
+            currentFilter={currentFilter}
+            onOpenCreate={handleOpenCreate}
+            isDialogOpen={isDialogOpen}
+            setIsDialogOpen={setIsDialogOpen}
+            taskToEdit={taskToEdit}
+            setTaskToEdit={setTaskToEdit}
+          />
+        </main>
+      </div>
     </div>
   );
 }
