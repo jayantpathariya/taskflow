@@ -39,6 +39,13 @@ app.get("/health", (_req, res) => {
 // API Routes
 app.use("/api/v1", routes);
 
+// 404 Not Found Handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    error: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error("Unhandled error:", err);
