@@ -37,7 +37,7 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/start`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["timer", "active"] });
+      queryClient.invalidateQueries({ queryKey: ["timer"] });
     },
   });
 
@@ -45,7 +45,7 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/stop`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["timer", "active"] });
+      queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });
@@ -55,6 +55,7 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
       apiClient.put(`/tasks/${task.id}`, { status: newStatus }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });
@@ -63,6 +64,7 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
     mutationFn: () => apiClient.delete(`/tasks/${task.id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });

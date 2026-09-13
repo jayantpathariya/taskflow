@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import type { ITask, TasksListResponse, ActiveTimerResponse } from "@taskflow/shared";
+import type {
+  ITask,
+  TasksListResponse,
+  ActiveTimerResponse,
+} from "@taskflow/shared";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TaskDialog } from "@/components/dashboard/task-dialog";
 import { ActiveTimerWidget } from "@/components/dashboard/active-timer-widget";
@@ -141,7 +145,10 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
 
         {/* Main Content View */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto">
-          {children({ onOpenCreate: handleOpenCreate, onOpenEdit: handleOpenEdit })}
+          {children({
+            onOpenCreate: handleOpenCreate,
+            onOpenEdit: handleOpenEdit,
+          })}
         </main>
       </div>
 

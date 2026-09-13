@@ -24,7 +24,11 @@ export interface TimeLogResponse {
   timeLog: ITimeLog;
 }
 
+export interface ITimeLogItem extends Omit<ITimeLog, "taskId"> {
+  taskId: Pick<ITask, "id" | "title" | "status"> | string;
+}
+
 export interface TimeLogsListResponse {
-  timeLogs: ITimeLog[];
+  timeLogs: ITimeLogItem[];
   totalDurationSeconds: number;
 }

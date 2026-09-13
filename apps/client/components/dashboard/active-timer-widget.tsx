@@ -49,7 +49,7 @@ export function ActiveTimerWidget() {
     mutationFn: (taskId: string) => apiClient.post('/tasks/' + taskId + '/timer/stop'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["timer", "active"] });
+      queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });

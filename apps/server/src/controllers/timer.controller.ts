@@ -132,7 +132,9 @@ export const getAllUserTimeLogs = async (
 ): Promise<void> => {
   const userId = req.userId!;
 
-  const logs = await TimeLog.find({ userId }).sort({ startTime: -1 });
+  const logs = await TimeLog.find({ userId })
+    .populate("taskId", "title status")
+    .sort({ startTime: -1 });
 
   const totalDurationSeconds = logs.reduce(
     (sum, log: any) => sum + (log.durationSeconds || 0),

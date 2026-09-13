@@ -10,6 +10,7 @@ import {
   CircleDashed,
   Timer,
   BarChart3,
+  History,
   Plus,
   LogOut,
   User as UserIcon,
@@ -38,6 +39,7 @@ export function Sidebar({
   const { user, logout } = useAuth();
 
   const isInsights = pathname === "/insights";
+  const isTimeLogs = pathname === "/time-logs";
 
   const navItems = [
     {
@@ -152,6 +154,20 @@ export function Sidebar({
           >
             <BarChart3 className="size-4" />
             <span>Insights</span>
+          </Link>
+
+          <Link
+            href="/time-logs"
+            onClick={onCloseMobile}
+            className={
+              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
+              (isTimeLogs
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
+            }
+          >
+            <History className="size-4" />
+            <span>Time Logs</span>
           </Link>
 
           {/* Task Views Section */}
