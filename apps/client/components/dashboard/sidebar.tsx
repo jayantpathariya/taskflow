@@ -82,15 +82,15 @@ export function Sidebar({
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Container: Fixed height sticky sidebar that never stretches with page scroll */}
       <aside
         className={
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-200 ease-in-out md:static md:translate-x-0 " +
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 shrink-0 flex-col border-r border-border bg-card transition-transform duration-200 ease-in-out md:sticky md:top-0 md:translate-x-0 " +
           (mobileOpen ? "translate-x-0" : "-translate-x-full")
         }
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between px-5 border-b border-border">
+        <div className="flex h-16 shrink-0 items-center justify-between px-5 border-b border-border">
           <Link
             href="/"
             onClick={onCloseMobile}
@@ -123,7 +123,7 @@ export function Sidebar({
         </div>
 
         {/* Quick Action Button */}
-        <div className="p-4">
+        <div className="p-4 shrink-0">
           <Button
             onClick={() => {
               onNewTask();
@@ -136,7 +136,7 @@ export function Sidebar({
           </Button>
         </div>
 
-        {/* Navigation Sections */}
+        {/* Navigation Sections with internal scrolling if needed */}
         <div className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
           {/* Insights as first section */}
           <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -209,7 +209,7 @@ export function Sidebar({
 
         {/* User Profile Footer */}
         {user && (
-          <div className="p-3 border-t border-border">
+          <div className="p-3 border-t border-border shrink-0">
             <div className="flex items-center justify-between rounded-xl p-2 bg-muted/40 border border-border/50">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs">
