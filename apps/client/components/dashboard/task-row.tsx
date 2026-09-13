@@ -13,8 +13,8 @@ import {
   Trash2,
   Clock,
   CheckCircle2,
-  Circle,
-  Clock3,
+  CircleDashed,
+  Timer,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -110,9 +110,9 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
           {task.status === "COMPLETED" ? (
             <CheckCircle2 className="size-5 text-primary fill-primary/20" />
           ) : task.status === "IN_PROGRESS" ? (
-            <Clock3 className="size-5 text-amber-500" />
+            <Timer className="size-5 text-amber-500" />
           ) : (
-            <Circle className="size-5 hover:stroke-primary" />
+            <CircleDashed className="size-5 hover:stroke-primary" />
           )}
         </button>
 
@@ -211,23 +211,41 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
           >
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(task)} className="gap-2">
+          <DropdownMenuContent align="end" className="min-w-44">
+            <DropdownMenuItem onClick={() => onEdit(task)} className="gap-2 whitespace-nowrap">
               <Pencil className="size-3.5" />
               <span>Edit</span>
             </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={handleToggleComplete}
-              className="gap-2"
-            >
-              <CheckCircle2 className="size-3.5" />
-              <span>
-                {task.status === "COMPLETED"
-                  ? "Mark as Pending"
-                  : "Mark as Completed"}
-              </span>
-            </DropdownMenuItem>
+            {task.status !== "PENDING" && (
+              <DropdownMenuItem
+                onClick={() => updateStatusMutation.mutate("PENDING")}
+                className="gap-2 whitespace-nowrap"
+              >
+                <CircleDashed className="size-3.5" />
+                <span>Mark as Pending</span>
+              </DropdownMenuItem>
+            )}
+
+            {task.status !== "IN_PROGRESS" && (
+              <DropdownMenuItem
+                onClick={() => updateStatusMutation.mutate("IN_PROGRESS")}
+                className="gap-2 whitespace-nowrap"
+              >
+                <Timer className="size-3.5" />
+                <span>Mark as In Progress</span>
+              </DropdownMenuItem>
+            )}
+
+            {task.status !== "COMPLETED" && (
+              <DropdownMenuItem
+                onClick={() => updateStatusMutation.mutate("COMPLETED")}
+                className="gap-2 whitespace-nowrap"
+              >
+                <CheckCircle2 className="size-3.5" />
+                <span>Mark as Completed</span>
+              </DropdownMenuItem>
+            )}
 
             <DropdownMenuSeparator />
 

@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   ListTodo,
-  Clock,
-  CheckCircle,
-  Clock3,
+  CircleDashed,
+  Timer,
   Plus,
   LogOut,
   User as UserIcon,
@@ -48,19 +47,19 @@ export function Sidebar({
     {
       id: "PENDING",
       label: "Pending",
-      icon: Clock3,
+      icon: CircleDashed,
       count: taskCounts.pending,
     },
     {
       id: "IN_PROGRESS",
       label: "In Progress",
-      icon: Clock,
+      icon: Timer,
       count: taskCounts.inProgress,
     },
     {
       id: "COMPLETED",
       label: "Completed",
-      icon: CheckCircle,
+      icon: CheckCircle2,
       count: taskCounts.completed,
     },
   ];

@@ -161,7 +161,7 @@ export function TaskDialog({
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-2.5">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wider">
               <Sparkles className="size-3.5" />
-              <span>AI Magic Generator</span>
+              <span>AI Task Generator</span>
             </div>
             <div className="flex gap-2">
               <Input
