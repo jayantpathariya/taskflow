@@ -82,7 +82,7 @@ export function ActiveTimerWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3.5 shadow-xl backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3.5 shadow-xl backdrop-blur-md">
       {/* Blinking indicator & icon */}
       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Timer className="size-5 animate-pulse" />
