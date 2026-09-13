@@ -35,3 +35,13 @@ export const updateTaskSchema = z.object({
 });
 
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+
+export const aiTaskSuggestionSchema = z.object({
+  prompt: z
+    .string()
+    .trim()
+    .min(2, "Prompt must be at least 2 characters")
+    .max(300, "Prompt cannot exceed 300 characters"),
+});
+
+export type AiTaskSuggestionInput = z.infer<typeof aiTaskSuggestionSchema>;

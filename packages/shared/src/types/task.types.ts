@@ -19,3 +19,8 @@ export interface TasksListResponse {
   tasks: ITask[];
   total: number;
 }
+
+export interface AiTaskSuggestionResponse {
+  title: string;
+  description: string;
+}
