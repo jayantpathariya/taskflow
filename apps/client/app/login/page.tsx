@@ -18,7 +18,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Info } from "lucide-react";
 import { isAxiosError } from "axios";
 
 export default function LoginPage() {
@@ -54,8 +54,8 @@ export default function LoginPage() {
       if (isAxiosError(err)) {
         setServerError(
           err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Failed to sign in. Please check your credentials."
+            err.response?.data?.message ||
+            "Failed to sign in. Please check your credentials."
         );
       } else {
         setServerError("An unexpected error occurred. Please try again.");
@@ -85,7 +85,7 @@ export default function LoginPage() {
         </div>
 
         <Card className="border-border shadow-sm">
-          <CardHeader className="space-y-1 pb-4">
+          <CardHeader className="space-y-1 pb-3">
             <CardTitle className="text-xl font-semibold">
               Welcome back
             </CardTitle>
@@ -93,6 +93,16 @@ export default function LoginPage() {
               Sign in with your email and password to access your dashboard
             </CardDescription>
           </CardHeader>
+
+          {/* Render cold start reviewer notice */}
+          <div className="mx-6 mb-3 rounded-lg border border-border/70 bg-muted/40 p-2.5 text-xs text-muted-foreground flex items-start gap-2">
+            <Info className="size-4 shrink-0 text-muted-foreground mt-0.5" />
+            <p className="leading-relaxed">
+              <span className="font-medium text-foreground">Note:</span> Backend
+              is hosted on Render free tier. If requests take 30–50s on initial
+              attempt, the instance is spinning up from cold start.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
@@ -159,12 +169,17 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setValue("email", "johndoe@test.com", { shouldValidate: true });
+                  setValue("email", "johndoe@test.com", {
+                    shouldValidate: true,
+                  });
                   setValue("password", "Test@1234", { shouldValidate: true });
                 }}
                 className="w-full py-1.5 px-2 rounded-lg border border-dashed border-border/80 bg-muted/30 hover:bg-muted/70 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-center"
               >
-                Evaluating project? <span className="font-semibold text-foreground underline underline-offset-2">Auto-fill demo credentials</span>
+                Evaluating project?{" "}
+                <span className="font-semibold text-foreground underline underline-offset-2">
+                  Auto-fill demo credentials
+                </span>
               </button>
 
               <div className="text-center text-sm text-muted-foreground pt-1">
