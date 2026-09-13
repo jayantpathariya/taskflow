@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { status } from "http-status";
 import { Task } from "../models/task.model.js";
+import { TimeLog } from "../models/timeLog.model.js";
 import { generateTaskSuggestion } from "../services/ai.service.js";
 import type {
   CreateTaskInput,
@@ -13,16 +14,12 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
   const { status: statusFilter } = req.query;
 
   const filter: Record<string, any> = { userId };
-  if (statusFilter) {
+  if (statusFilter && ["PENDING", "IN_PROGRESS", "COMPLETED"].includes(statusFilter as string)) {
     filter.status = statusFilter;
   }
 
   const tasks = await Task.find(filter).sort({ createdAt: -1 });
-
-  res.status(status.OK).json({
-    tasks,
-    total: tasks.length,
-  });
+  res.status(status.OK).json({ tasks, total: tasks.length });
 };
 
 export const getTaskById = async (
@@ -52,7 +49,7 @@ export const createTask = async (
     userId,
     title,
     description,
-    status: taskStatus,
+    status: taskStatus || "PENDING",
   });
 
   res.status(status.CREATED).json({ task });
@@ -64,6 +61,33 @@ export const updateTask = async (
 ): Promise<void> => {
   const { id } = req.params;
   const userId = req.userId!;
+
+  // If status is being changed to COMPLETED, stop any running timer for this task
+  if (req.body.status === "COMPLETED") {
+    const runningTimer = await TimeLog.findOne({
+      taskId: id,
+      userId,
+      isRunning: true,
+    });
+
+    if (runningTimer) {
+      const now = new Date();
+      const elapsedSeconds = Math.max(
+        0,
+        Math.round((now.getTime() - runningTimer.startTime.getTime()) / 1000)
+      );
+      runningTimer.endTime = now;
+      runningTimer.durationSeconds = elapsedSeconds;
+      runningTimer.isRunning = false;
+      await runningTimer.save();
+
+      // Accumulate total time spent on task
+      await Task.findOneAndUpdate(
+        { _id: id, userId },
+        { $inc: { totalTimeSpentSeconds: elapsedSeconds } }
+      );
+    }
+  }
 
   const task = await Task.findOneAndUpdate(
     { _id: id, userId },
@@ -85,6 +109,23 @@ export const deleteTask = async (
 ): Promise<void> => {
   const { id } = req.params;
   const userId = req.userId!;
+
+  // Stop running timer if any before deletion
+  const runningTimer = await TimeLog.findOne({
+    taskId: id,
+    userId,
+    isRunning: true,
+  });
+  if (runningTimer) {
+    const now = new Date();
+    runningTimer.endTime = now;
+    runningTimer.durationSeconds = Math.max(
+      0,
+      Math.round((now.getTime() - runningTimer.startTime.getTime()) / 1000)
+    );
+    runningTimer.isRunning = false;
+    await runningTimer.save();
+  }
 
   const task = await Task.findOneAndDelete({ _id: id, userId });
   if (!task) {
