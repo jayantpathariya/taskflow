@@ -2,8 +2,7 @@ import { Schema, model, type Document } from "mongoose";
 import type { IUser } from "@taskflow/shared";
 
 export interface IUserDocument
-  extends Document,
-    Omit<IUser, "id" | "createdAt" | "updatedAt"> {
+  extends Document, Omit<IUser, "id" | "createdAt" | "updatedAt"> {
   passwordHash: string;
   createdAt: Date;
   updatedAt: Date;
@@ -31,19 +30,15 @@ const userSchema = new Schema<IUserDocument>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, any>) => {
+        delete ret._id;
+        delete ret.__v;
+        delete ret.passwordHash;
+      },
+    },
   }
 );
-
-userSchema.set("toJSON", {
-  transform: (_doc, ret: Record<string, any>): IUser => {
-    return {
-      id: ret._id.toString(),
-      name: ret.name,
-      email: ret.email,
-      createdAt: ret.createdAt.toISOString(),
-      updatedAt: ret.updatedAt.toISOString(),
-    };
-  },
-});
 
 export const User = model<IUserDocument>("User", userSchema);
