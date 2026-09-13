@@ -18,6 +18,7 @@ export const createTaskSchema = z.object({
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
+export type CreateTaskFormInput = z.input<typeof createTaskSchema>;
 
 export const updateTaskSchema = z.object({
   title: z

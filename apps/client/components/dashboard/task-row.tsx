@@ -33,14 +33,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { Eye } from "lucide-react";
 
 interface TaskRowProps {
   task: ITask;
   isActiveTimer: boolean;
   onEdit: (task: ITask) => void;
+  onSelect?: (task: ITask) => void;
 }
 
-export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
+export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps) {
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -49,6 +52,13 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", task.id, "time-logs"] });
+      toast.info("Timer started", {
+        description: `Tracking focus time for "${task.title}".`,
+      });
+    },
+    onError: () => {
+      toast.error("Failed to start timer");
     },
   });
 
@@ -58,16 +68,35 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", task.id, "time-logs"] });
+      toast.success("Timer stopped", {
+        description: `Logged session duration for "${task.title}".`,
+      });
+    },
+    onError: () => {
+      toast.error("Failed to stop timer");
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: (newStatus: TaskStatus) =>
       apiClient.put(`/tasks/${task.id}`, { status: newStatus }),
-    onSuccess: () => {
+    onSuccess: (_, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      const statusLabel =
+        newStatus === "COMPLETED"
+          ? "Completed"
+          : newStatus === "IN_PROGRESS"
+          ? "In Progress"
+          : "Pending";
+      toast.success("Status updated", {
+        description: `"${task.title}" moved to ${statusLabel}.`,
+      });
+    },
+    onError: () => {
+      toast.error("Failed to update status");
     },
   });
 
@@ -77,6 +106,12 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      toast.error("Task deleted", {
+        description: `"${task.title}" has been deleted.`,
+      });
+    },
+    onError: () => {
+      toast.error("Failed to delete task");
     },
   });
 
@@ -129,10 +164,14 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
           )}
         </button>
 
-        <div className="min-w-0 flex-1">
+        <div
+          onClick={() => onSelect?.(task)}
+          className="min-w-0 flex-1 cursor-pointer group/title"
+          title="Click to view details and time logs"
+        >
           <div className="flex items-center gap-2">
             <span
-              className={`font-medium text-sm truncate ${
+              className={`font-medium text-sm truncate group-hover/title:text-primary transition-colors ${
                 task.status === "COMPLETED"
                   ? "line-through text-muted-foreground"
                   : "text-foreground"
@@ -225,6 +264,11 @@ export function TaskRow({ task, isActiveTimer, onEdit }: TaskRowProps) {
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
+            <DropdownMenuItem onClick={() => onSelect?.(task)} className="gap-2 whitespace-nowrap">
+              <Eye className="size-3.5" />
+              <span>View Details</span>
+            </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => onEdit(task)} className="gap-2 whitespace-nowrap">
               <Pencil className="size-3.5" />
               <span>Edit</span>

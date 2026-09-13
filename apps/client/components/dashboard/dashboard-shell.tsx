@@ -12,6 +12,7 @@ import type {
 } from "@taskflow/shared";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TaskDialog } from "@/components/dashboard/task-dialog";
+import { TaskDetailSheet } from "@/components/dashboard/task-detail-sheet";
 import { ActiveTimerWidget } from "@/components/dashboard/active-timer-widget";
 import { Button } from "@/components/ui/button";
 import { Menu, Loader2, Clock } from "lucide-react";
@@ -20,6 +21,7 @@ interface DashboardShellProps {
   children: (props: {
     onOpenCreate: () => void;
     onOpenEdit: (task: ITask) => void;
+    onOpenDetail?: (task: ITask) => void;
   }) => React.ReactNode;
   pageTitle: string;
 }
@@ -31,6 +33,7 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<ITask | null>(null);
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -81,6 +84,11 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
     return tasks.find((t) => t.id === activeId);
   }, [activeTimer, tasks]);
 
+  const detailTask = useMemo(() => {
+    if (!detailTaskId || !tasks) return null;
+    return tasks.find((t) => t.id === detailTaskId) || null;
+  }, [detailTaskId, tasks]);
+
   if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -97,6 +105,10 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
   const handleOpenEdit = (task: ITask) => {
     setTaskToEdit(task);
     setIsDialogOpen(true);
+  };
+
+  const handleOpenDetail = (task: ITask) => {
+    setDetailTaskId(task.id);
   };
 
   return (
@@ -135,14 +147,19 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
 
           {/* Active Timer Indicator / Status in Header */}
           {activeTask && (
-            <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <button
+              type="button"
+              onClick={() => handleOpenDetail(activeTask)}
+              className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-2xs"
+              title="Click to view active task details & sessions"
+            >
               <span className="size-2 rounded-full bg-primary animate-ping" />
               <Clock className="size-3.5" />
               <span className="hidden sm:inline">Recording:</span>
               <span className="font-semibold truncate max-w-[140px]">
                 {activeTask.title}
               </span>
-            </div>
+            </button>
           )}
         </header>
 
@@ -151,6 +168,7 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
           {children({
             onOpenCreate: handleOpenCreate,
             onOpenEdit: handleOpenEdit,
+            onOpenDetail: handleOpenDetail,
           })}
         </main>
       </div>
@@ -160,6 +178,14 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         taskToEdit={taskToEdit}
+      />
+
+      {/* Task Detail Slide-over Sheet */}
+      <TaskDetailSheet
+        task={detailTask}
+        open={!!detailTask}
+        onOpenChange={(open) => !open && setDetailTaskId(null)}
+        onEditTask={handleOpenEdit}
       />
 
       {/* Floating Active Timer Widget */}

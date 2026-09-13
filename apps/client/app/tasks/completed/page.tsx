@@ -6,11 +6,12 @@ import { TaskList } from "@/components/dashboard/task-list";
 export default function CompletedTasksPage() {
   return (
     <DashboardShell pageTitle="Completed Tasks">
-      {({ onOpenCreate, onOpenEdit }) => (
+      {({ onOpenCreate, onOpenEdit, onOpenDetail }) => (
         <TaskList
           currentFilter="COMPLETED"
           onOpenCreate={onOpenCreate}
           onOpenEdit={onOpenEdit}
+          onOpenDetail={onOpenDetail}
         />
       )}
     </DashboardShell>

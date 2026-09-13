@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api";
 import {
   createTaskSchema,
   type CreateTaskInput,
+  type CreateTaskFormInput,
   type ITask,
   type TaskStatus,
   type AiTaskSuggestionResponse,
@@ -25,12 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Loader2 } from "lucide-react";
 import { isAxiosError } from "axios";
-
-type TaskFormValues = {
-  title: string;
-  description?: string;
-  status?: TaskStatus;
-};
+import { toast } from "sonner";
 
 interface TaskDialogProps {
   open: boolean;
@@ -57,8 +53,8 @@ export function TaskDialog({
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<TaskFormValues>({
-    resolver: zodResolver(createTaskSchema) as any,
+  } = useForm<CreateTaskFormInput, unknown, CreateTaskInput>({
+    resolver: zodResolver(createTaskSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -87,28 +83,38 @@ export function TaskDialog({
   }, [taskToEdit, open, reset]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: TaskFormValues) => {
+    mutationFn: async (data: CreateTaskInput) => {
       if (isEditing) {
         return (await apiClient.put(`/tasks/${taskToEdit.id}`, data)).data;
       }
       return (await apiClient.post("/tasks", data)).data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      if (isEditing) {
+        queryClient.invalidateQueries({
+          queryKey: ["tasks", taskToEdit?.id, "time-logs"],
+        });
+        toast.success("Task updated", {
+          description: `Saved changes for "${variables.title}".`,
+        });
+      } else {
+        toast.success("Task created", {
+          description: `"${variables.title}" added to your tasks.`,
+        });
+      }
       onOpenChange(false);
     },
     onError: (err) => {
-      if (isAxiosError(err)) {
-        setServerError(
-          err.response?.data?.error ||
+      const errMsg = isAxiosError(err)
+        ? err.response?.data?.error ||
           err.response?.data?.message ||
           "Failed to save task."
-        );
-      } else {
-        setServerError("An unexpected error occurred.");
-      }
+        : "An unexpected error occurred.";
+      setServerError(errMsg);
+      toast.error("Failed to save task", { description: errMsg });
     },
   });
 
@@ -128,19 +134,22 @@ export function TaskDialog({
       if (res.data.description) {
         setValue("description", res.data.description, { shouldValidate: true });
       }
+      toast.info("AI suggested details filled", {
+        description: "Review and click Create Task to save.",
+      });
       setAiPrompt("");
     } catch (err) {
-      if (isAxiosError(err)) {
-        setServerError(
-          err.response?.data?.error || "AI generation failed. Please try again."
-        );
-      }
+      const errMsg = isAxiosError(err)
+        ? err.response?.data?.error || "AI generation failed. Please try again."
+        : "AI generation failed.";
+      setServerError(errMsg);
+      toast.error("AI Generation Error", { description: errMsg });
     } finally {
       setIsGeneratingAi(false);
     }
   };
 
-  const onSubmit = (data: TaskFormValues) => {
+  const onSubmit = (data: CreateTaskInput) => {
     setServerError("");
     saveMutation.mutate(data);
   };
@@ -149,7 +158,9 @@ export function TaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Task" : "Create New Task"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Task" : "Create New Task"}
+          </DialogTitle>
           <DialogDescription>
             {isEditing
               ? "Update task details and workflow status"
@@ -264,7 +275,10 @@ export function TaskDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || saveMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || saveMutation.isPending}
+            >
               {isSubmitting || saveMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />

@@ -124,7 +124,7 @@ export function DailyAnalytics() {
             <span>Productivity Dashboard</span>
           </div>
           <h2 className="text-xl font-bold tracking-tight text-foreground mt-1">
-            Today's Performance Overview
+            Today&apos;s Performance Overview
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Real-time breakdown of time logged, task focus distribution, and workflow completion

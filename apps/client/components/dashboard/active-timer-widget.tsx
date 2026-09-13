@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ActiveTimerResponse } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
-import { Timer, Square, Play, Sparkles } from "lucide-react";
+import { Timer, Square } from "lucide-react";
+import { toast } from "sonner";
 
 export function ActiveTimerWidget() {
   const queryClient = useQueryClient();
@@ -21,52 +22,55 @@ export function ActiveTimerWidget() {
 
   const activeTimer = timerData?.activeTimer;
 
-  // Track live elapsed seconds locally with a 1-second interval
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  // Track live elapsed time using 1-second interval
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!activeTimer?.startTime) {
-      setElapsedSeconds(0);
-      return;
-    }
-
-    const calculateElapsed = () => {
-      const startMs = new Date(activeTimer.startTime).getTime();
-      const nowMs = Date.now();
-      return Math.max(0, Math.floor((nowMs - startMs) / 1000));
-    };
-
-    setElapsedSeconds(calculateElapsed());
-
+    if (!activeTimer?.startTime) return;
     const interval = setInterval(() => {
-      setElapsedSeconds(calculateElapsed());
+      setNow(Date.now());
     }, 1000);
-
     return () => clearInterval(interval);
   }, [activeTimer?.startTime]);
 
+  const elapsedSeconds = activeTimer?.startTime
+    ? Math.max(
+        0,
+        Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000)
+      )
+    : 0;
+
+  const taskId = activeTimer
+    ? typeof activeTimer.taskId === "object"
+      ? activeTimer.taskId.id
+      : String(activeTimer.taskId)
+    : "";
+
+  const taskTitle = activeTimer
+    ? typeof activeTimer.taskId === "object"
+      ? activeTimer.taskId.title
+      : "Active Task"
+    : "Active Task";
+
   const stopTimerMutation = useMutation({
-    mutationFn: (taskId: string) => apiClient.post('/tasks/' + taskId + '/timer/stop'),
+    mutationFn: (id: string) => apiClient.post('/tasks/' + id + '/timer/stop'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", taskId, "time-logs"] });
+      toast.success("Timer stopped", {
+        description: `Focus session recorded for "${taskTitle}".`,
+      });
+    },
+    onError: () => {
+      toast.error("Failed to stop timer");
     },
   });
 
   if (!activeTimer) {
     return null;
   }
-
-  const taskId =
-    typeof activeTimer.taskId === "object"
-      ? activeTimer.taskId.id
-      : (activeTimer.taskId as string);
-
-  const taskTitle =
-    typeof activeTimer.taskId === "object"
-      ? activeTimer.taskId.title
-      : "Active Task";
 
   const formatTimer = (totalSec: number) => {
     const hours = Math.floor(totalSec / 3600);

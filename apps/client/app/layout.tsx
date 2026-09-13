@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'});
 
@@ -36,7 +37,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <Toaster richColors position="top-right" closeButton />
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

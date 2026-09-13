@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ITask, TasksListResponse, ActiveTimerResponse } from "@taskflow/shared";
 import { TaskRow } from "./task-row";
+import { TaskDetailSheet } from "./task-detail-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, ListTodo, Loader2, Search } from "lucide-react";
@@ -13,14 +14,17 @@ interface TaskListProps {
   currentFilter: "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
   onOpenCreate: () => void;
   onOpenEdit: (task: ITask) => void;
+  onOpenDetail?: (task: ITask) => void;
 }
 
 export function TaskList({
   currentFilter,
   onOpenCreate,
   onOpenEdit,
+  onOpenDetail,
 }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Fetch all tasks
   const { data: allTasksData, isLoading: tasksLoading } = useQuery<TasksListResponse>({
@@ -60,6 +64,11 @@ export function TaskList({
       return matchesStatus && matchesSearch;
     });
   }, [allTasksData?.tasks, currentFilter, searchQuery]);
+
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return null;
+    return allTasksData?.tasks.find((t) => t.id === selectedTaskId) || null;
+  }, [selectedTaskId, allTasksData?.tasks]);
 
   const viewTitle =
     currentFilter === "PENDING"
@@ -139,9 +148,20 @@ export function TaskList({
               task={task}
               isActiveTimer={activeTaskId === task.id}
               onEdit={onOpenEdit}
+              onSelect={onOpenDetail ? onOpenDetail : (t) => setSelectedTaskId(t.id)}
             />
           ))}
         </div>
+      )}
+
+      {/* Fallback Task Detail Slide-over Sheet (if parent did not provide onOpenDetail) */}
+      {!onOpenDetail && (
+        <TaskDetailSheet
+          task={selectedTask}
+          open={!!selectedTask}
+          onOpenChange={(open) => !open && setSelectedTaskId(null)}
+          onEditTask={onOpenEdit}
+        />
       )}
     </div>
   );
