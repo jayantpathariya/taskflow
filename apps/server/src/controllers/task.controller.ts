@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import { status } from "http-status";
 import { Task } from "../models/task.model.js";
-import type { CreateTaskInput, UpdateTaskInput } from "@taskflow/shared";
+import { generateTaskSuggestion } from "../services/ai.service.js";
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+  AiTaskSuggestionInput,
+} from "@taskflow/shared";
 
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
@@ -89,3 +94,13 @@ export const deleteTask = async (
 
   res.status(status.OK).json({ message: "Task deleted successfully" });
 };
+
+export const suggestTask = async (
+  req: Request<unknown, unknown, AiTaskSuggestionInput>,
+  res: Response
+): Promise<void> => {
+  const { prompt } = req.body;
+  const suggestion = await generateTaskSuggestion(prompt);
+  res.status(status.OK).json(suggestion);
+};
+

@@ -17,7 +17,9 @@
   "packageManager": "pnpm@12.4.0",
   "type": "module",
   "dependencies": {
+    "@ai-sdk/google": "^4.0.69",
     "@taskflow/shared": "workspace:*",
+    "ai": "^7.0.99",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

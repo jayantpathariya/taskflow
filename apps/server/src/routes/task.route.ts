@@ -5,6 +5,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  suggestTask,
 } from "../controllers/task.controller.js";
 import {
   startTimer,
@@ -13,12 +14,18 @@ import {
 } from "../controllers/timer.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { validateBody } from "../middlewares/validate.middleware.js";
-import { createTaskSchema, updateTaskSchema } from "@taskflow/shared";
+import {
+  createTaskSchema,
+  updateTaskSchema,
+  aiTaskSuggestionSchema,
+} from "@taskflow/shared";
 
 const router = Router();
 
 // Protect all task routes
 router.use(authenticate);
+
+router.post("/ai-suggest", validateBody(aiTaskSuggestionSchema), suggestTask);
 
 router.get("/", getTasks);
 router.post("/", validateBody(createTaskSchema), createTask);
