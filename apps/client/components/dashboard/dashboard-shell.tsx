@@ -59,24 +59,27 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
     refetchInterval: 5000,
   });
 
+  const tasks = tasksData?.tasks;
+  const activeTimer = timerData?.activeTimer;
+
   const taskCounts = useMemo(() => {
-    const tasks = tasksData?.tasks || [];
+    const list = tasks || [];
     return {
-      all: tasks.length,
-      pending: tasks.filter((t) => t.status === "PENDING").length,
-      inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
-      completed: tasks.filter((t) => t.status === "COMPLETED").length,
+      all: list.length,
+      pending: list.filter((t) => t.status === "PENDING").length,
+      inProgress: list.filter((t) => t.status === "IN_PROGRESS").length,
+      completed: list.filter((t) => t.status === "COMPLETED").length,
     };
-  }, [tasksData?.tasks]);
+  }, [tasks]);
 
   const activeTask = useMemo(() => {
-    if (!timerData?.activeTimer || !tasksData?.tasks) return null;
+    if (!activeTimer || !tasks) return null;
     const activeId =
-      typeof timerData.activeTimer.taskId === "object"
-        ? timerData.activeTimer.taskId.id
-        : timerData.activeTimer.taskId;
-    return tasksData.tasks.find((t) => t.id === activeId);
-  }, [timerData?.activeTimer, tasksData?.tasks]);
+      typeof activeTimer.taskId === "object"
+        ? activeTimer.taskId.id
+        : activeTimer.taskId;
+    return tasks.find((t) => t.id === activeId);
+  }, [activeTimer, tasks]);
 
   if (isLoading || !user) {
     return (
