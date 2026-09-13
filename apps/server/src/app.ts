@@ -4,10 +4,20 @@ import express, {
   type NextFunction,
 } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
 
 const app = express();
+
+app.set("trust proxy", 1);
+
+// Security Headers
+app.use(helmet());
+
+// Response Compression
+app.use(compression());
 
 app.use(
   cors({
