@@ -159,8 +159,8 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setValue("email", "demo@taskflow.dev", { shouldValidate: true });
-                  setValue("password", "Password123!", { shouldValidate: true });
+                  setValue("email", "johndoe@test.com", { shouldValidate: true });
+                  setValue("password", "Test@1234", { shouldValidate: true });
                 }}
                 className="w-full py-1.5 px-2 rounded-lg border border-dashed border-border/80 bg-muted/30 hover:bg-muted/70 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-center"
               >

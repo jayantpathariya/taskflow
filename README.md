@@ -26,7 +26,7 @@ TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 
 | Email | Password |
 |---|---|
-| `demo@taskflow.dev` | `Password123!` |
+| `johndoe@test.com` | `Test@1234` |
 
 *(You can also register a new account on `/register`).*
 
