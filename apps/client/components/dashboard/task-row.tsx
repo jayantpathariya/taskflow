@@ -42,16 +42,32 @@ interface TaskRowProps {
   onSelect?: (task: ITask) => void;
 }
 
-export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps) {
+export function TaskRow({
+  task,
+  isActiveTimer,
+  onEdit,
+  onSelect,
+}: TaskRowProps) {
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const startTimerMutation = useMutation({
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/start`),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const timeLog = res.data?.timeLog;
+      if (timeLog) {
+        queryClient.setQueryData(["timer", "active"], {
+          activeTimer: {
+            ...timeLog,
+            taskId: { id: task.id, title: task.title, status: task.status },
+          },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks", task.id, "time-logs"] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks", task.id, "time-logs"],
+      });
       toast.info("Timer started", {
         description: `Tracking focus time for "${task.title}".`,
       });
@@ -64,10 +80,13 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
   const stopTimerMutation = useMutation({
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/stop`),
     onSuccess: () => {
+      queryClient.setQueryData(["timer", "active"], { activeTimer: null });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks", task.id, "time-logs"] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks", task.id, "time-logs"],
+      });
       toast.success("Timer stopped", {
         description: `Logged session duration for "${task.title}".`,
       });
@@ -88,8 +107,8 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
         newStatus === "COMPLETED"
           ? "Completed"
           : newStatus === "IN_PROGRESS"
-          ? "In Progress"
-          : "Pending";
+            ? "In Progress"
+            : "Pending";
       toast.success("Status updated", {
         description: `"${task.title}" moved to ${statusLabel}.`,
       });
@@ -120,11 +139,15 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
   const formatDuration = (totalSeconds: number = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
-    return `${minutes}m`;
+    if (minutes > 0) {
+      return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+    }
+    return `${seconds}s`;
   };
 
   const handleToggleComplete = () => {
@@ -204,16 +227,16 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
               task.status === "COMPLETED"
                 ? "bg-emerald-500"
                 : task.status === "IN_PROGRESS"
-                ? "bg-amber-500"
-                : "bg-muted-foreground/50"
+                  ? "bg-amber-500"
+                  : "bg-muted-foreground/50"
             }`}
           />
           <span className="text-muted-foreground text-[11px]">
             {task.status === "IN_PROGRESS"
               ? "In Progress"
               : task.status === "COMPLETED"
-              ? "Completed"
-              : "Pending"}
+                ? "Completed"
+                : "Pending"}
           </span>
         </div>
 
@@ -265,12 +288,18 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
-            <DropdownMenuItem onClick={() => onSelect?.(task)} className="gap-2 whitespace-nowrap">
+            <DropdownMenuItem
+              onClick={() => onSelect?.(task)}
+              className="gap-2 whitespace-nowrap"
+            >
               <Eye className="size-3.5" />
               <span>View Details</span>
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => onEdit(task)} className="gap-2 whitespace-nowrap">
+            <DropdownMenuItem
+              onClick={() => onEdit(task)}
+              className="gap-2 whitespace-nowrap"
+            >
               <Pencil className="size-3.5" />
               <span>Edit</span>
             </DropdownMenuItem>
@@ -323,7 +352,9 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
             <DialogHeader>
               <DialogTitle>Delete Task</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &ldquo;{task.title}&rdquo;? This action cannot be undone and will permanently remove all associated time logs.
+                Are you sure you want to delete &ldquo;{task.title}&rdquo;? This
+                action cannot be undone and will permanently remove all
+                associated time logs.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:gap-0 mt-4">

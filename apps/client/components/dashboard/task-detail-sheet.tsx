@@ -90,7 +90,16 @@ export function TaskDetailSheet({
   // Mutations
   const startTimerMutation = useMutation({
     mutationFn: () => apiClient.post(`/tasks/${task?.id}/timer/start`),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const timeLog = res.data?.timeLog;
+      if (timeLog && task) {
+        queryClient.setQueryData(["timer", "active"], {
+          activeTimer: {
+            ...timeLog,
+            taskId: { id: task.id, title: task.title, status: task.status },
+          },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({
@@ -108,6 +117,7 @@ export function TaskDetailSheet({
   const stopTimerMutation = useMutation({
     mutationFn: () => apiClient.post(`/tasks/${task?.id}/timer/stop`),
     onSuccess: () => {
+      queryClient.setQueryData(["timer", "active"], { activeTimer: null });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
@@ -134,8 +144,8 @@ export function TaskDetailSheet({
         newStatus === "COMPLETED"
           ? "Completed"
           : newStatus === "IN_PROGRESS"
-          ? "In Progress"
-          : "Pending";
+            ? "In Progress"
+            : "Pending";
       toast.success("Status updated", {
         description: `"${task?.title}" moved to ${statusLabel}.`,
       });
@@ -184,8 +194,11 @@ export function TaskDetailSheet({
   const formatShortDuration = (totalSeconds: number = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
     if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+    if (minutes > 0)
+      return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+    return `${seconds}s`;
   };
 
   const formatDate = (isoDate: string) => {
@@ -275,45 +288,45 @@ export function TaskDetailSheet({
                   <span className="text-xs text-muted-foreground font-medium mr-1">
                     Status:
                   </span>
-                  {(["PENDING", "IN_PROGRESS", "COMPLETED"] as TaskStatus[]).map(
-                    (status) => {
-                      const isSelected = task.status === status;
-                      return (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => updateStatusMutation.mutate(status)}
-                          disabled={updateStatusMutation.isPending}
-                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
-                            isSelected
-                              ? status === "COMPLETED"
-                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-semibold"
-                                : status === "IN_PROGRESS"
+                  {(
+                    ["PENDING", "IN_PROGRESS", "COMPLETED"] as TaskStatus[]
+                  ).map((status) => {
+                    const isSelected = task.status === status;
+                    return (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => updateStatusMutation.mutate(status)}
+                        disabled={updateStatusMutation.isPending}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                          isSelected
+                            ? status === "COMPLETED"
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-semibold"
+                              : status === "IN_PROGRESS"
                                 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-semibold"
                                 : "bg-primary/15 text-primary border border-primary/30 font-semibold"
-                              : "border border-border text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                          }`}
-                        >
-                          {status === "COMPLETED" && (
-                            <CheckCircle2 className="size-3.5" />
-                          )}
-                          {status === "IN_PROGRESS" && (
-                            <Timer className="size-3.5" />
-                          )}
-                          {status === "PENDING" && (
-                            <CircleDashed className="size-3.5" />
-                          )}
-                          <span>
-                            {status === "COMPLETED"
-                              ? "Completed"
-                              : status === "IN_PROGRESS"
+                            : "border border-border text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                        }`}
+                      >
+                        {status === "COMPLETED" && (
+                          <CheckCircle2 className="size-3.5" />
+                        )}
+                        {status === "IN_PROGRESS" && (
+                          <Timer className="size-3.5" />
+                        )}
+                        {status === "PENDING" && (
+                          <CircleDashed className="size-3.5" />
+                        )}
+                        <span>
+                          {status === "COMPLETED"
+                            ? "Completed"
+                            : status === "IN_PROGRESS"
                               ? "In Progress"
                               : "Pending"}
-                          </span>
-                        </button>
-                      );
-                    }
-                  )}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -369,7 +382,8 @@ export function TaskDetailSheet({
                     <p className="whitespace-pre-wrap">{task.description}</p>
                   ) : (
                     <p className="text-muted-foreground italic">
-                      No description provided. Click the edit icon above to add context.
+                      No description provided. Click the edit icon above to add
+                      context.
                     </p>
                   )}
                 </div>
@@ -393,7 +407,8 @@ export function TaskDetailSheet({
                     <span>Total Sessions</span>
                   </div>
                   <p className="text-xs font-semibold text-foreground font-mono">
-                    {timeLogs.length} {timeLogs.length === 1 ? "session" : "sessions"}
+                    {timeLogs.length}{" "}
+                    {timeLogs.length === 1 ? "session" : "sessions"}
                   </p>
                 </div>
               </div>
@@ -423,7 +438,8 @@ export function TaskDetailSheet({
                       No time logged on this task yet
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-1 max-w-xs">
-                      Click &ldquo;Start Timer&rdquo; to begin tracking your focused effort on this task.
+                      Click &ldquo;Start Timer&rdquo; to begin tracking your
+                      focused effort on this task.
                     </p>
                   </div>
                 ) : (
@@ -488,7 +504,9 @@ export function TaskDetailSheet({
           <DialogHeader>
             <DialogTitle>Delete Task</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{task.title}&rdquo;? This will permanently remove the task and all {timeLogs.length} associated focus logs.
+              Are you sure you want to delete &ldquo;{task.title}&rdquo;? This
+              will permanently remove the task and all {timeLogs.length}{" "}
+              associated focus logs.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0 mt-4">

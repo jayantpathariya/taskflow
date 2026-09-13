@@ -14,12 +14,39 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
   const { status: statusFilter } = req.query;
 
   const filter: Record<string, any> = { userId };
-  if (statusFilter && ["PENDING", "IN_PROGRESS", "COMPLETED"].includes(statusFilter as string)) {
+  if (
+    statusFilter &&
+    ["PENDING", "IN_PROGRESS", "COMPLETED"].includes(statusFilter as string)
+  ) {
     filter.status = statusFilter;
   }
 
   const tasks = await Task.find(filter).sort({ createdAt: -1 });
-  res.status(status.OK).json({ tasks, total: tasks.length });
+
+  // Calculate accumulated time for tasks from TimeLogs if totalTimeSpentSeconds is missing or unsynced
+  const taskIds = tasks.map((t) => t._id);
+  const durationAgg = await TimeLog.aggregate([
+    { $match: { taskId: { $in: taskIds } } },
+    { $group: { _id: "$taskId", totalDuration: { $sum: "$durationSeconds" } } },
+  ]);
+
+  const durationMap = new Map<string, number>(
+    durationAgg.map((d: any) => [d._id.toString(), d.totalDuration])
+  );
+
+  const tasksWithTotal = tasks.map((task) => {
+    const taskObj = task.toJSON();
+    const loggedSeconds = durationMap.get(task._id.toString()) || 0;
+    taskObj.totalTimeSpentSeconds = Math.max(
+      taskObj.totalTimeSpentSeconds || 0,
+      loggedSeconds
+    );
+    return taskObj;
+  });
+
+  res
+    .status(status.OK)
+    .json({ tasks: tasksWithTotal, total: tasksWithTotal.length });
 };
 
 export const getTaskById = async (
@@ -35,7 +62,19 @@ export const getTaskById = async (
     return;
   }
 
-  res.status(status.OK).json({ task });
+  const durationAgg = await TimeLog.aggregate([
+    { $match: { taskId: task._id } },
+    { $group: { _id: "$taskId", totalDuration: { $sum: "$durationSeconds" } } },
+  ]);
+
+  const taskObj = task.toJSON();
+  const loggedSeconds = durationAgg[0]?.totalDuration || 0;
+  taskObj.totalTimeSpentSeconds = Math.max(
+    taskObj.totalTimeSpentSeconds || 0,
+    loggedSeconds
+  );
+
+  res.status(status.OK).json({ task: taskObj });
 };
 
 export const createTask = async (
@@ -144,4 +183,3 @@ export const suggestTask = async (
   const suggestion = await generateTaskSuggestion(prompt);
   res.status(status.OK).json(suggestion);
 };
-

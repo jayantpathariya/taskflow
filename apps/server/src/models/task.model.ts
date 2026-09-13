@@ -34,6 +34,11 @@ const taskSchema = new Schema<ITaskDocument>(
       default: "PENDING",
       index: true,
     },
+    totalTimeSpentSeconds: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,

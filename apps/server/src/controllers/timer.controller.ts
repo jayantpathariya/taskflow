@@ -43,6 +43,12 @@ export const startTimer = async (
     running.durationSeconds = elapsedSeconds;
     running.isRunning = false;
     await running.save();
+
+    // Accumulate total time spent on the previously timed task
+    await Task.findOneAndUpdate(
+      { _id: running.taskId, userId },
+      { $inc: { totalTimeSpentSeconds: elapsedSeconds } }
+    );
   }
 
   if (task.status === "PENDING") {
@@ -91,6 +97,12 @@ export const stopTimer = async (
   runningTimer.isRunning = false;
   await runningTimer.save();
 
+  // Accumulate total time spent on this task
+  await Task.findOneAndUpdate(
+    { _id: taskId, userId },
+    { $inc: { totalTimeSpentSeconds: elapsedSeconds } }
+  );
+
   res.status(status.OK).json({ timeLog: runningTimer });
 };
 
@@ -101,6 +113,7 @@ export const getActiveTimer = async (
   const userId = req.userId!;
 
   const activeTimer = await TimeLog.findOne({ userId, isRunning: true })
+    .sort({ startTime: -1 })
     .populate("taskId", "title status");
 
   res.status(status.OK).json({ activeTimer });

@@ -28,11 +28,15 @@ export function DailyAnalytics() {
   const formatTotalTime = (totalSeconds: number = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
-    return `${minutes}m`;
+    if (minutes > 0) {
+      return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+    }
+    return `${seconds}s`;
   };
 
   const todayStr = new Date().toLocaleDateString(undefined, {
@@ -128,7 +132,8 @@ export function DailyAnalytics() {
             Performance & Insights
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Daily breakdown of recorded focus time, task focus allocation, and status breakdown.
+            Daily breakdown of recorded focus time, task focus allocation, and
+            status breakdown.
           </p>
         </div>
 
@@ -186,7 +191,9 @@ export function DailyAnalytics() {
           {tasksWorkedOn.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
               <Layers className="size-6 text-muted-foreground/50 mb-1.5" />
-              <p className="text-xs font-medium text-foreground">No focus time logged today</p>
+              <p className="text-xs font-medium text-foreground">
+                No focus time logged today
+              </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Start a timer on any task to record focus sessions here.
               </p>
@@ -276,7 +283,9 @@ export function DailyAnalytics() {
 
             <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono tabular-nums pt-0.5">
               <span>0%</span>
-              <span className="font-semibold text-foreground">{completedPct}% Completed</span>
+              <span className="font-semibold text-foreground">
+                {completedPct}% Completed
+              </span>
               <span>100%</span>
             </div>
           </div>
@@ -286,39 +295,51 @@ export function DailyAnalytics() {
             <div className="flex items-center justify-between text-xs py-0.5">
               <div className="flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
-                <span className="text-muted-foreground text-[11px]">Completed</span>
+                <span className="text-muted-foreground text-[11px]">
+                  Completed
+                </span>
               </div>
               <div className="flex items-center gap-2 font-mono tabular-nums text-xs">
                 <span className="font-semibold text-foreground">
                   {analytics?.completedTasksCount || 0}
                 </span>
-                <span className="text-muted-foreground/70">({completedPct}%)</span>
+                <span className="text-muted-foreground/70">
+                  ({completedPct}%)
+                </span>
               </div>
             </div>
 
             <div className="flex items-center justify-between text-xs py-0.5">
               <div className="flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-amber-500" />
-                <span className="text-muted-foreground text-[11px]">In Progress</span>
+                <span className="text-muted-foreground text-[11px]">
+                  In Progress
+                </span>
               </div>
               <div className="flex items-center gap-2 font-mono tabular-nums text-xs">
                 <span className="font-semibold text-foreground">
                   {analytics?.inProgressTasksCount || 0}
                 </span>
-                <span className="text-muted-foreground/70">({inProgressPct}%)</span>
+                <span className="text-muted-foreground/70">
+                  ({inProgressPct}%)
+                </span>
               </div>
             </div>
 
             <div className="flex items-center justify-between text-xs py-0.5">
               <div className="flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-                <span className="text-muted-foreground text-[11px]">Pending</span>
+                <span className="text-muted-foreground text-[11px]">
+                  Pending
+                </span>
               </div>
               <div className="flex items-center gap-2 font-mono tabular-nums text-xs">
                 <span className="font-semibold text-foreground">
                   {analytics?.pendingTasksCount || 0}
                 </span>
-                <span className="text-muted-foreground/70">({pendingPct}%)</span>
+                <span className="text-muted-foreground/70">
+                  ({pendingPct}%)
+                </span>
               </div>
             </div>
           </div>
@@ -335,14 +356,17 @@ export function DailyAnalytics() {
             </h3>
           </div>
           <span className="text-xs text-muted-foreground font-mono tabular-nums">
-            {tasksWorkedOn.length} {tasksWorkedOn.length === 1 ? "task" : "tasks"}
+            {tasksWorkedOn.length}{" "}
+            {tasksWorkedOn.length === 1 ? "task" : "tasks"}
           </span>
         </div>
 
         {tasksWorkedOn.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground">
             <Layers className="size-6 text-muted-foreground/50 mb-1.5" />
-            <p className="text-xs font-medium text-foreground">No sessions logged today</p>
+            <p className="text-xs font-medium text-foreground">
+              No sessions logged today
+            </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               Start a timer on any task to record focus activity.
             </p>
@@ -360,8 +384,8 @@ export function DailyAnalytics() {
                       t.status === "COMPLETED"
                         ? "bg-emerald-500"
                         : t.status === "IN_PROGRESS"
-                        ? "bg-amber-500"
-                        : "bg-muted-foreground/50"
+                          ? "bg-amber-500"
+                          : "bg-muted-foreground/50"
                     }`}
                   />
                   <div className="min-w-0 flex-1">

@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ActiveTimerResponse } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
 import { Square } from "lucide-react";
 import { toast } from "sonner";
+
+function subscribeTimer(callback: () => void) {
+  const interval = setInterval(callback, 1000);
+  return () => clearInterval(interval);
+}
+
+function getTimerSnapshot() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function getServerTimerSnapshot() {
+  return 0;
+}
 
 export function ActiveTimerWidget() {
   const queryClient = useQueryClient();
@@ -17,26 +30,23 @@ export function ActiveTimerWidget() {
       const res = await apiClient.get<ActiveTimerResponse>("/timer/active");
       return res.data;
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000,
   });
 
   const activeTimer = timerData?.activeTimer;
 
-  // Track live elapsed time using 1-second interval
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!activeTimer?.startTime) return;
-    const interval = setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [activeTimer?.startTime]);
+  // Track live clock using external store subscription (prevents impure render & cascading renders)
+  const currentSecond = useSyncExternalStore(
+    subscribeTimer,
+    getTimerSnapshot,
+    getServerTimerSnapshot
+  );
 
   const elapsedSeconds = activeTimer?.startTime
     ? Math.max(
         0,
-        Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000)
+        currentSecond -
+          Math.floor(new Date(activeTimer.startTime).getTime() / 1000)
       )
     : 0;
 
@@ -53,12 +63,15 @@ export function ActiveTimerWidget() {
     : "Active Task";
 
   const stopTimerMutation = useMutation({
-    mutationFn: (id: string) => apiClient.post('/tasks/' + id + '/timer/stop'),
+    mutationFn: (id: string) => apiClient.post("/tasks/" + id + "/timer/stop"),
     onSuccess: () => {
+      queryClient.setQueryData(["timer", "active"], { activeTimer: null });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["timer"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks", taskId, "time-logs"] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks", taskId, "time-logs"],
+      });
       toast.success("Timer stopped", {
         description: `Focus session recorded for "${taskTitle}".`,
       });
@@ -80,9 +93,9 @@ export function ActiveTimerWidget() {
     const pad = (n: number) => n.toString().padStart(2, "0");
 
     if (hours > 0) {
-      return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+      return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
     }
-    return pad(minutes) + ':' + pad(seconds);
+    return pad(minutes) + ":" + pad(seconds);
   };
 
   return (
@@ -93,7 +106,10 @@ export function ActiveTimerWidget() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
           <span className="relative inline-flex size-2 rounded-full bg-primary" />
         </span>
-        <span className="truncate font-medium text-foreground text-xs" title={taskTitle}>
+        <span
+          className="truncate font-medium text-foreground text-xs"
+          title={taskTitle}
+        >
           {taskTitle}
         </span>
       </div>
