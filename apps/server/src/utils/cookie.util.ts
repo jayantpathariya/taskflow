@@ -6,11 +6,12 @@ export const REFRESH_TOKEN_COOKIE = "refresh_token";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const baseCookieOptions: CookieOptions = {
+const baseCookieOptions: CookieOptions & { partitioned?: boolean } = {
   httpOnly: true,
   secure: isProduction,
   sameSite: isProduction ? "none" : "lax",
   path: "/",
+  ...(isProduction ? { partitioned: true } : {}),
 };
 
 // 15 minutes for access token
