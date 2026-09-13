@@ -3,54 +3,26 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import type { ITask, TasksListResponse } from "@taskflow/shared";
+import type { ITask, TasksListResponse, ActiveTimerResponse } from "@taskflow/shared";
 import { TaskRow } from "./task-row";
-import { TaskDialog } from "./task-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Plus,
-  ListTodo,
-  Loader2,
-  Search,
-  SlidersHorizontal,
-  Clock,
-} from "lucide-react";
-
-interface ActiveTimerResponse {
-  timer: {
-    id: string;
-    taskId: string;
-    startTime: string;
-  } | null;
-}
+import { Plus, ListTodo, Loader2, Search } from "lucide-react";
 
 interface TaskListProps {
-  currentFilter: string;
+  currentFilter: "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
   onOpenCreate: () => void;
-  isDialogOpen: boolean;
-  setIsDialogOpen: (open: boolean) => void;
-  taskToEdit: ITask | null;
-  setTaskToEdit: (task: ITask | null) => void;
-  onCountsUpdate?: (counts: {
-    all: number;
-    pending: number;
-    inProgress: number;
-    completed: number;
-  }) => void;
+  onOpenEdit: (task: ITask) => void;
 }
 
 export function TaskList({
   currentFilter,
   onOpenCreate,
-  isDialogOpen,
-  setIsDialogOpen,
-  taskToEdit,
-  setTaskToEdit,
+  onOpenEdit,
 }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch all tasks without filter for counts and filter client-side or by query
+  // Fetch all tasks
   const { data: allTasksData, isLoading: tasksLoading } = useQuery<TasksListResponse>({
     queryKey: ["tasks"],
     queryFn: async () => {
@@ -68,14 +40,13 @@ export function TaskList({
     refetchInterval: 5000,
   });
 
-  const activeTaskId = timerData?.timer?.taskId;
+  const activeTaskId =
+    timerData?.activeTimer &&
+    (typeof timerData.activeTimer.taskId === "object"
+      ? timerData.activeTimer.taskId.id
+      : (timerData.activeTimer.taskId as string));
 
-  const handleOpenEdit = (task: ITask) => {
-    setTaskToEdit(task);
-    setIsDialogOpen(true);
-  };
-
-  // Filter tasks based on status and search
+  // Filter tasks based on status and search query
   const filteredTasks = useMemo(() => {
     const tasks = allTasksData?.tasks || [];
     return tasks.filter((task) => {
@@ -167,18 +138,11 @@ export function TaskList({
               key={task.id}
               task={task}
               isActiveTimer={activeTaskId === task.id}
-              onEdit={handleOpenEdit}
+              onEdit={onOpenEdit}
             />
           ))}
         </div>
       )}
-
-      {/* Create / Edit Dialog */}
-      <TaskDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        taskToEdit={taskToEdit}
-      />
     </div>
   );
 }

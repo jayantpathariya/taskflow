@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +9,7 @@ import {
   ListTodo,
   CircleDashed,
   Timer,
+  BarChart3,
   Plus,
   LogOut,
   User as UserIcon,
@@ -14,8 +17,6 @@ import {
 } from "lucide-react";
 
 interface SidebarProps {
-  currentFilter: string;
-  onFilterChange: (filter: string) => void;
   onNewTask: () => void;
   taskCounts: {
     all: number;
@@ -28,39 +29,44 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  currentFilter,
-  onFilterChange,
   onNewTask,
   taskCounts,
   mobileOpen,
   onCloseMobile,
 }: SidebarProps) {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
+
+  const isInsights = pathname === "/insights";
 
   const navItems = [
     {
-      id: "ALL",
+      href: "/",
       label: "All Tasks",
       icon: ListTodo,
       count: taskCounts.all,
+      isActive: pathname === "/",
     },
     {
-      id: "PENDING",
+      href: "/tasks/pending",
       label: "Pending",
       icon: CircleDashed,
       count: taskCounts.pending,
+      isActive: pathname === "/tasks/pending",
     },
     {
-      id: "IN_PROGRESS",
+      href: "/tasks/in-progress",
       label: "In Progress",
       icon: Timer,
       count: taskCounts.inProgress,
+      isActive: pathname === "/tasks/in-progress",
     },
     {
-      id: "COMPLETED",
+      href: "/tasks/completed",
       label: "Completed",
       icon: CheckCircle2,
       count: taskCounts.completed,
+      isActive: pathname === "/tasks/completed",
     },
   ];
 
@@ -76,13 +82,18 @@ export function Sidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-200 ease-in-out md:static md:translate-x-0 " +
+          (mobileOpen ? "translate-x-0" : "-translate-x-full")
+        }
       >
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-border">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/"
+            onClick={onCloseMobile}
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+          >
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <CheckCircle2 className="size-5" />
             </div>
@@ -94,7 +105,7 @@ export function Sidebar({
                 Workspace
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Close button on mobile */}
           {onCloseMobile && (
@@ -123,42 +134,59 @@ export function Sidebar({
           </Button>
         </div>
 
-        {/* Navigation Filters */}
+        {/* Navigation Sections */}
         <div className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+          {/* Insights as first section */}
           <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Overview
+          </div>
+          <Link
+            href="/insights"
+            onClick={onCloseMobile}
+            className={
+              "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
+              (isInsights
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
+            }
+          >
+            <BarChart3 className="size-4" />
+            <span>Insights</span>
+          </Link>
+
+          {/* Task Views Section */}
+          <div className="pt-4 pb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Task Views
           </div>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isSelected = currentFilter === item.id;
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  onFilterChange(item.id);
-                  onCloseMobile?.();
-                }}
-                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
-                  isSelected
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onCloseMobile}
+                className={
+                  "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-all " +
+                  (item.isActive
                     ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                }`}
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground")
+                }
               >
                 <div className="flex items-center gap-2.5">
                   <Icon className="size-4" />
                   <span>{item.label}</span>
                 </div>
                 <span
-                  className={`rounded-md px-1.5 py-0.5 text-[11px] font-mono ${
-                    isSelected
+                  className={
+                    "rounded-md px-1.5 py-0.5 text-[11px] font-mono " +
+                    (item.isActive
                       ? "bg-primary-foreground/20 text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                      : "bg-muted text-muted-foreground")
+                  }
                 >
                   {item.count}
                 </span>
-              </button>
+              </Link>
             );
           })}
         </div>

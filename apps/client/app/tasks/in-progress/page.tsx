@@ -3,12 +3,12 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { TaskList } from "@/components/dashboard/task-list";
 
-export default function AllTasksPage() {
+export default function InProgressTasksPage() {
   return (
-    <DashboardShell pageTitle="All Tasks">
+    <DashboardShell pageTitle="In Progress Tasks">
       {({ onOpenCreate, onOpenEdit }) => (
         <TaskList
-          currentFilter="ALL"
+          currentFilter="IN_PROGRESS"
           onOpenCreate={onOpenCreate}
           onOpenEdit={onOpenEdit}
         />

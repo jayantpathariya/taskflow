@@ -3,12 +3,12 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { TaskList } from "@/components/dashboard/task-list";
 
-export default function AllTasksPage() {
+export default function PendingTasksPage() {
   return (
-    <DashboardShell pageTitle="All Tasks">
+    <DashboardShell pageTitle="Pending Tasks">
       {({ onOpenCreate, onOpenEdit }) => (
         <TaskList
-          currentFilter="ALL"
+          currentFilter="PENDING"
           onOpenCreate={onOpenCreate}
           onOpenEdit={onOpenEdit}
         />
