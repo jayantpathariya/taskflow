@@ -21,11 +21,7 @@ export const startTimer = async (
     }
 
     // Verify task exists and belongs to this user
-    const task = await Task.findOne({
-      _id: taskId,
-      userId: userId,
-    });
-
+    const task = await Task.findOne({ _id: taskId, userId });
     if (!task) {
       res.status(status.NOT_FOUND).json({ error: "Task not found" });
       return;
@@ -33,8 +29,8 @@ export const startTimer = async (
 
     // Check if this task already has a running timer
     const existingRunning = await TimeLog.findOne({
-      taskId: taskId,
-      userId: userId,
+      taskId,
+      userId,
       isRunning: true,
     });
 
@@ -46,13 +42,10 @@ export const startTimer = async (
       return;
     }
 
-    // Stop any OTHER currently running timers for this user (only 1 active timer allowed at a time)
-    const runningTimers = await TimeLog.find({
-      userId: userId,
-      isRunning: true,
-    });
-
+    // Stop any other currently running timers for this user
+    const runningTimers = await TimeLog.find({ userId, isRunning: true });
     const now = new Date();
+
     for (const running of runningTimers) {
       const elapsedSeconds = Math.max(
         0,
@@ -64,7 +57,7 @@ export const startTimer = async (
       await running.save();
     }
 
-    // Automatically transition task status to IN_PROGRESS if it was PENDING
+    // Automatically transition task status to IN_PROGRESS if PENDING
     if (task.status === "PENDING") {
       task.status = "IN_PROGRESS";
       await task.save();
@@ -72,8 +65,8 @@ export const startTimer = async (
 
     // Start new time log
     const timeLog = await TimeLog.create({
-      taskId: taskId,
-      userId: userId,
+      taskId,
+      userId,
       startTime: now,
       isRunning: true,
     });
@@ -102,10 +95,9 @@ export const stopTimer = async (
       return;
     }
 
-    // Find active running timer for this task
     const runningTimer = await TimeLog.findOne({
-      taskId: taskId,
-      userId: userId,
+      taskId,
+      userId,
       isRunning: true,
     });
 
@@ -129,6 +121,93 @@ export const stopTimer = async (
 
     res.status(status.OK).json({
       timeLog: runningTimer.toJSON(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getActiveTimer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res
+        .status(status.UNAUTHORIZED)
+        .json({ error: "Authentication required" });
+      return;
+    }
+
+    const activeTimer = await TimeLog.findOne({
+      userId,
+      isRunning: true,
+    }).populate("taskId", "title status");
+
+    res.status(status.OK).json({ activeTimer });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTaskTimeLogs = async (
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id: taskId } = req.params;
+    const userId = req.userId;
+
+    if (!userId) {
+      res
+        .status(status.UNAUTHORIZED)
+        .json({ error: "Authentication required" });
+      return;
+    }
+
+    const logs = await TimeLog.find({ taskId, userId }).sort({ startTime: -1 });
+
+    const totalDurationSeconds = logs.reduce(
+      (sum, log) => sum + (log.durationSeconds || 0),
+      0
+    );
+
+    res.status(status.OK).json({
+      timeLogs: logs.map((log) => log.toJSON()),
+      totalDurationSeconds,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllUserTimeLogs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res
+        .status(status.UNAUTHORIZED)
+        .json({ error: "Authentication required" });
+      return;
+    }
+
+    const logs = await TimeLog.find({ userId }).sort({ startTime: -1 });
+
+    const totalDurationSeconds = logs.reduce(
+      (sum, log) => sum + (log.durationSeconds || 0),
+      0
+    );
+
+    res.status(status.OK).json({
+      timeLogs: logs.map((log) => log.toJSON()),
+      totalDurationSeconds,
     });
   } catch (error) {
     next(error);

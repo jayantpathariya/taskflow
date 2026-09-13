@@ -12,8 +12,8 @@ export interface ITimeLog {
   updatedAt: string;
 }
 
-export interface ActiveTimerInfo extends ITimeLog {
-  task: Pick<ITask, "id" | "title" | "status">;
+export interface ActiveTimerInfo extends Omit<ITimeLog, "taskId"> {
+  taskId: Pick<ITask, "id" | "title" | "status">;
 }
 
 export interface ActiveTimerResponse {

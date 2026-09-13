@@ -2,8 +2,7 @@ import { Schema, model, type Document, type Types } from "mongoose";
 import type { ITimeLog } from "@taskflow/shared";
 
 export interface ITimeLogDocument
-  extends
-    Document,
+  extends Document,
     Omit<
       ITimeLog,
       | "id"
@@ -58,29 +57,14 @@ const timeLogSchema = new Schema<ITimeLogDocument>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, any>) => {
+        delete ret._id;
+        delete ret.__v;
+      },
+    },
   }
 );
-
-timeLogSchema.set("toJSON", {
-  transform: (_doc, ret: Record<string, any>): ITimeLog => {
-    return {
-      id: ret._id.toString(),
-      taskId: ret.taskId.toString(),
-      userId: ret.userId.toString(),
-      startTime:
-        ret.startTime instanceof Date
-          ? ret.startTime.toISOString()
-          : ret.startTime,
-      endTime:
-        ret.endTime instanceof Date
-          ? ret.endTime.toISOString()
-          : ret.endTime || null,
-      durationSeconds: ret.durationSeconds,
-      isRunning: ret.isRunning,
-      createdAt: ret.createdAt.toISOString(),
-      updatedAt: ret.updatedAt.toISOString(),
-    };
-  },
-});
 
 export const TimeLog = model<ITimeLogDocument>("TimeLog", timeLogSchema);

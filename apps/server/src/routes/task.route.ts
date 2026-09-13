@@ -9,6 +9,7 @@ import {
 import {
   startTimer,
   stopTimer,
+  getTaskTimeLogs,
 } from "../controllers/timer.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { validateBody } from "../middlewares/validate.middleware.js";
@@ -25,8 +26,9 @@ router.get("/:id", getTaskById);
 router.put("/:id", validateBody(updateTaskSchema), updateTask);
 router.delete("/:id", deleteTask);
 
-// Timer routes
+// Task Timer routes
 router.post("/:id/timer/start", startTimer);
 router.post("/:id/timer/stop", stopTimer);
+router.get("/:id/time-logs", getTaskTimeLogs);
 
 export default router;
