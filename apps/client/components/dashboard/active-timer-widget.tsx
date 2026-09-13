@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ActiveTimerResponse } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
-import { Timer, Square } from "lucide-react";
+import { Square } from "lucide-react";
 import { toast } from "sonner";
 
 export function ActiveTimerWidget() {
@@ -86,27 +86,20 @@ export function ActiveTimerWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3.5 shadow-xl backdrop-blur-md">
-      {/* Blinking indicator & icon */}
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Timer className="size-5 animate-pulse" />
-      </div>
-
-      {/* Task Details */}
-      <div className="min-w-0 pr-1 max-w-[180px] sm:max-w-[240px]">
-        <div className="flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-primary animate-ping" />
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-            Tracking Time
-          </span>
-        </div>
-        <p className="text-xs font-semibold text-foreground truncate mt-0.5" title={taskTitle}>
+    <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2.5 rounded-lg border border-border bg-card/95 px-3 py-2 shadow-md backdrop-blur-md text-xs">
+      {/* Live Indicator & Task Title */}
+      <div className="flex items-center gap-2 min-w-0 max-w-[180px] sm:max-w-xs">
+        <span className="relative flex size-2 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex size-2 rounded-full bg-primary" />
+        </span>
+        <span className="truncate font-medium text-foreground text-xs" title={taskTitle}>
           {taskTitle}
-        </p>
+        </span>
       </div>
 
-      {/* Live Counter Display */}
-      <div className="rounded-xl bg-muted/70 px-2.5 py-1 font-mono text-sm font-bold tracking-tight text-foreground">
+      {/* Tabular Monospace Counter */}
+      <div className="rounded bg-muted px-2 py-0.5 font-mono tabular-nums text-xs font-semibold text-foreground tracking-tight shrink-0 border border-border/40">
         {formatTimer(elapsedSeconds)}
       </div>
 
@@ -116,9 +109,10 @@ export function ActiveTimerWidget() {
         variant="destructive"
         onClick={() => stopTimerMutation.mutate(taskId)}
         disabled={stopTimerMutation.isPending}
-        className="h-8 gap-1.5 px-3 text-xs font-semibold shadow-xs shrink-0"
+        className="h-6.5 gap-1 px-2 text-xs font-medium shrink-0 cursor-pointer"
+        title="Stop tracking time"
       >
-        <Square className="size-3.5 fill-current" />
+        <Square className="size-3 fill-current" />
         <span>Stop</span>
       </Button>
     </div>

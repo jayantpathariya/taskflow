@@ -8,7 +8,9 @@ import { TaskRow } from "./task-row";
 import { TaskDetailSheet } from "./task-detail-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, ListTodo, Loader2, Search } from "lucide-react";
+import { Plus, ListTodo, Loader2, Search, X as ClearIcon, ArrowUpDown } from "lucide-react";
+
+type SortOption = "newest" | "oldest" | "time";
 
 interface TaskListProps {
   currentFilter: "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
@@ -25,6 +27,7 @@ export function TaskList({
 }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   // Fetch all tasks
   const { data: allTasksData, isLoading: tasksLoading } = useQuery<TasksListResponse>({
@@ -50,10 +53,10 @@ export function TaskList({
       ? timerData.activeTimer.taskId.id
       : (timerData.activeTimer.taskId as string));
 
-  // Filter tasks based on status and search query
-  const filteredTasks = useMemo(() => {
+  // Filter tasks based on status and search query, then sort
+  const filteredAndSortedTasks = useMemo(() => {
     const tasks = allTasksData?.tasks || [];
-    return tasks.filter((task) => {
+    const filtered = tasks.filter((task) => {
       const matchesStatus =
         currentFilter === "ALL" || task.status === currentFilter;
       const matchesSearch =
@@ -63,7 +66,18 @@ export function TaskList({
           task.description.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesStatus && matchesSearch;
     });
-  }, [allTasksData?.tasks, currentFilter, searchQuery]);
+
+    return filtered.sort((a, b) => {
+      if (sortBy === "oldest") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortBy === "time") {
+        return (b.totalTimeSpentSeconds || 0) - (a.totalTimeSpentSeconds || 0);
+      }
+      // default: newest
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [allTasksData?.tasks, currentFilter, searchQuery, sortBy]);
 
   const selectedTask = useMemo(() => {
     if (!selectedTaskId) return null;
@@ -81,33 +95,61 @@ export function TaskList({
 
   return (
     <div className="space-y-4">
-      {/* List Header / Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-3.5 rounded-xl border border-border">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold text-foreground">{viewTitle}</h2>
-          <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded-md">
-            {filteredTasks.length} {filteredTasks.length === 1 ? "task" : "tasks"}
+      {/* Clean Un-nested Header Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">{viewTitle}</h2>
+          <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded-md border border-border/40">
+            {filteredAndSortedTasks.length} {filteredAndSortedTasks.length === 1 ? "task" : "tasks"}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
-          <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Search Bar with clear button */}
+          <div className="relative w-full sm:w-56">
+            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 text-xs bg-background"
+              className="h-8 pl-8 pr-7 text-xs bg-background"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Clear search"
+              >
+                <ClearIcon className="size-3.5" />
+              </button>
+            )}
           </div>
+
+          {/* Sort Selector */}
+          <div className="relative flex items-center">
+            <ArrowUpDown className="absolute left-2.5 size-3 text-muted-foreground pointer-events-none" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="h-8 pl-7 pr-2.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+              title="Sort tasks"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="time">Most time spent</option>
+            </select>
+          </div>
+
+          {/* Add Task Button */}
           <Button
             size="sm"
             onClick={onOpenCreate}
             className="h-8 gap-1.5 px-3 text-xs font-medium shrink-0"
           >
             <Plus className="size-3.5" />
-            <span className="hidden sm:inline">Add Task</span>
+            <span>Add Task</span>
           </Button>
         </div>
       </div>
@@ -120,7 +162,7 @@ export function TaskList({
             <span className="text-xs font-medium">Loading tasks...</span>
           </div>
         </div>
-      ) : filteredTasks.length === 0 ? (
+      ) : filteredAndSortedTasks.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card p-6 text-center">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground mb-3">
             <ListTodo className="size-6" />
@@ -142,7 +184,7 @@ export function TaskList({
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredTasks.map((task) => (
+          {filteredAndSortedTasks.map((task) => (
             <TaskRow
               key={task.id}
               task={task}

@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import type { ITask, TaskStatus } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -136,10 +135,10 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
 
   return (
     <div
-      className={`group flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border transition-all duration-150 ${
+      className={`group flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border transition-colors ${
         isActiveTimer
           ? "bg-primary/5 border-primary/40 shadow-xs"
-          : "bg-card border-border hover:border-border/80 hover:bg-muted/30"
+          : "bg-card border-border hover:border-border/90 hover:bg-muted/40"
       }`}
     >
       {/* Left side: Status checkbox & Title/Description */}
@@ -156,11 +155,11 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
           }
         >
           {task.status === "COMPLETED" ? (
-            <CheckCircle2 className="size-5 text-primary fill-primary/20" />
+            <CheckCircle2 className="size-4.5 text-primary fill-primary/20" />
           ) : task.status === "IN_PROGRESS" ? (
-            <Timer className="size-5 text-amber-500" />
+            <Timer className="size-4.5 text-amber-500" />
           ) : (
-            <CircleDashed className="size-5 hover:stroke-primary" />
+            <CircleDashed className="size-4.5 hover:stroke-primary" />
           )}
         </button>
 
@@ -171,7 +170,7 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
         >
           <div className="flex items-center gap-2">
             <span
-              className={`font-medium text-sm truncate group-hover/title:text-primary transition-colors ${
+              className={`font-medium text-xs sm:text-sm truncate group-hover/title:text-primary transition-colors ${
                 task.status === "COMPLETED"
                   ? "line-through text-muted-foreground"
                   : "text-foreground"
@@ -181,47 +180,49 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
             </span>
 
             {isActiveTimer && (
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
                 <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-                Active
+                Recording
               </span>
             )}
           </div>
 
           {task.description && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xl">
               {task.description}
             </p>
           )}
         </div>
       </div>
 
-      {/* Right side: Status Badge, Time Tracked, Timer Button, Actions Dropdown */}
-      <div className="flex items-center gap-3 shrink-0">
-        {/* Status Badge */}
-        <Badge
-          variant={
-            task.status === "COMPLETED"
-              ? "default"
-              : task.status === "IN_PROGRESS"
-              ? "secondary"
-              : "outline"
-          }
-          className="hidden sm:inline-flex text-[11px] font-medium"
-        >
-          {task.status === "IN_PROGRESS"
-            ? "In Progress"
-            : task.status === "COMPLETED"
-            ? "Completed"
-            : "Pending"}
-        </Badge>
+      {/* Right side: Status indicator, Time Tracked, Timer Button, Actions Dropdown */}
+      <div className="flex items-center gap-2.5 shrink-0">
+        {/* Compact Status Indicator */}
+        <div className="hidden sm:flex items-center gap-1.5 text-xs min-w-20">
+          <span
+            className={`size-1.5 rounded-full ${
+              task.status === "COMPLETED"
+                ? "bg-emerald-500"
+                : task.status === "IN_PROGRESS"
+                ? "bg-amber-500"
+                : "bg-muted-foreground/50"
+            }`}
+          />
+          <span className="text-muted-foreground text-[11px]">
+            {task.status === "IN_PROGRESS"
+              ? "In Progress"
+              : task.status === "COMPLETED"
+              ? "Completed"
+              : "Pending"}
+          </span>
+        </div>
 
-        {/* Time Tracked */}
+        {/* Time Tracked (Tabular Monospace) */}
         <div
-          className="flex items-center gap-1 text-xs text-muted-foreground min-w-16 justify-end font-mono"
+          className="flex items-center gap-1 text-xs text-muted-foreground min-w-14 justify-end font-mono tabular-nums"
           title="Total time spent"
         >
-          <Clock className="size-3 text-muted-foreground" />
+          <Clock className="size-3 text-muted-foreground/70" />
           <span>{formatDuration(task.totalTimeSpentSeconds)}</span>
         </div>
 
@@ -232,9 +233,9 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
             variant="destructive"
             onClick={() => stopTimerMutation.mutate()}
             disabled={isTimerBusy}
-            className="h-8 gap-1.5 px-2.5 text-xs font-medium shrink-0"
+            className="h-7 gap-1 px-2.5 text-xs font-medium shrink-0"
           >
-            <Square className="size-3.5 fill-current" />
+            <Square className="size-3 fill-current" />
             <span className="hidden md:inline">Stop</span>
           </Button>
         ) : (
@@ -243,9 +244,9 @@ export function TaskRow({ task, isActiveTimer, onEdit, onSelect }: TaskRowProps)
             variant="outline"
             onClick={() => startTimerMutation.mutate()}
             disabled={isTimerBusy || task.status === "COMPLETED"}
-            className="h-8 gap-1.5 px-2.5 text-xs font-medium shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+            className="h-7 gap-1 px-2.5 text-xs font-medium shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/30"
           >
-            <Play className="size-3.5 fill-current" />
+            <Play className="size-3 fill-current" />
             <span className="hidden md:inline">Start</span>
           </Button>
         )}

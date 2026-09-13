@@ -29,6 +29,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -142,7 +143,7 @@ export default function LoginPage() {
             <CardFooter className="flex flex-col gap-3 pt-2">
               <Button
                 type="submit"
-                className="w-full font-medium"
+                className="w-full font-medium cursor-pointer"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -155,7 +156,18 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <div className="text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("email", "demo@taskflow.dev", { shouldValidate: true });
+                  setValue("password", "Password123!", { shouldValidate: true });
+                }}
+                className="w-full py-1.5 px-2 rounded-lg border border-dashed border-border/80 bg-muted/30 hover:bg-muted/70 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-center"
+              >
+                Evaluating project? <span className="font-semibold text-foreground underline underline-offset-2">Auto-fill demo credentials</span>
+              </button>
+
+              <div className="text-center text-sm text-muted-foreground pt-1">
                 Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
