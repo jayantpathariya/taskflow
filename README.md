@@ -8,7 +8,7 @@ TaskFlow is a task management and real-time productivity tracking web applicatio
 
 TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 
-- **`apps/client`**: Next.js 16 (App Router) frontend built with React 19, Tailwind CSS v4, Base UI, and TanStack Query.
+- **`apps/client`**: Next.js 16 (App Router) frontend built with React 19, Tailwind CSS v4, Base UI, Sonner, and TanStack Query.
 - **`apps/server`**: Express 5 backend with TypeScript, Mongoose (MongoDB), and ioredis (Redis).
 - **`packages/shared`**: Shared Zod schemas and TypeScript types used by both client and server.
 - **MongoDB**: Persistent database storing users, tasks, and historical time logs.
@@ -17,10 +17,26 @@ TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 
 ---
 
+## Key Features
+
+- **Real-Time Time Tracking**: 1-click timer controls with a docked status bar, tabular monospace clock (`tabular-nums`), and background synchronization.
+- **Slide-Over Task Detail Drawer**: Inspect task details, modify status, start/stop timers, and view the individual session history audit trail (`GET /api/v1/tasks/:id/time-logs`).
+- **Productivity Performance & Insights**: Daily breakdown of recorded focus time, task focus allocation, and workflow status distribution.
+- **AI Task Enhancement**: Auto-structure natural language prompts into actionable titles and descriptions using Google Gemini.
+- **Toast Notifications System**: Instant visual feedback for task CRUD, status changes, timer start/stop, and error handling via Sonner.
+- **Sorting & Quick Filtering**: Filter by workflow status (*Pending*, *In Progress*, *Completed*) and sort by *Newest*, *Oldest*, or *Most Time Spent*.
+- **Dual-Token JWT Security**: Access tokens stored in HTTP-only cookies with Redis-backed refresh token rotation and session logout revocation.
+- **Evaluator-Friendly UX**: 1-click demo credential auto-fill directly on `/login` with upfront cold-start notices.
+
+---
+
 ## Live Demo & Test Credentials
 
-- **Live Web App:** [https://your-taskflow-domain.vercel.app](https://your-taskflow-domain.vercel.app) *(Placeholder)*
-- **API Base URL:** [https://api.your-taskflow-domain.com/api/v1](https://api.your-taskflow-domain.com/api/v1) *(Placeholder)*
+- **Live Web App:** [https://taskflow-jayant.vercel.app](https://taskflow-jayant.vercel.app)
+- **API Base URL:** [https://taskflow-demm.onrender.com/api/v1](https://taskflow-demm.onrender.com/api/v1)
+
+> [!NOTE]
+> **Render Free Tier Cold Starts:** The backend is deployed on Render's free tier, which spins down after 15 minutes of inactivity. If the initial request takes ~30–50s, the instance is waking up from a cold start. Subsequent requests will be fast.
 
 ### Test Credentials
 
@@ -28,7 +44,7 @@ TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 |---|---|
 | `johndoe@test.com` | `Test@1234` |
 
-*(You can also register a new account on `/register`).*
+*(You can also use the 1-click **"Auto-fill demo credentials"** button directly on `/login`, or register a new account on `/register`).*
 
 ---
 
