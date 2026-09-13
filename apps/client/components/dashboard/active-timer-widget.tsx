@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { apiClient, getServerTimeOffset, setServerTimeOffset } from "@/lib/api";
 import type { ActiveTimerResponse } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
 import { Square } from "lucide-react";
@@ -14,7 +14,7 @@ function subscribeTimer(callback: () => void) {
 }
 
 function getTimerSnapshot() {
-  return Math.floor(Date.now() / 1000);
+  return Math.floor((Date.now() + getServerTimeOffset()) / 1000);
 }
 
 function getServerTimerSnapshot() {
@@ -28,6 +28,9 @@ export function ActiveTimerWidget() {
     queryKey: ["timer", "active"],
     queryFn: async () => {
       const res = await apiClient.get<ActiveTimerResponse>("/timer/active");
+      if (res.data?.serverTime) {
+        setServerTimeOffset(res.data.serverTime);
+      }
       return res.data;
     },
     refetchInterval: 5000,

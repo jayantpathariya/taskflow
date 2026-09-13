@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +16,20 @@ let failedQueue: Array<{
   reject: (reason?: unknown) => void;
 }> = [];
 
+let serverTimeOffset = 0;
+
+export const getServerTimeOffset = () => serverTimeOffset;
+
+export const setServerTimeOffset = (serverTimeStrOrMs: string | number) => {
+  const serverMs =
+    typeof serverTimeStrOrMs === "number"
+      ? serverTimeStrOrMs
+      : new Date(serverTimeStrOrMs).getTime();
+  if (!isNaN(serverMs)) {
+    serverTimeOffset = serverMs - Date.now();
+  }
+};
+
 const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -29,7 +42,14 @@ const processQueue = (error: unknown) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const rawServerTime =
+      response.data?.serverTime || response.headers?.["date"];
+    if (rawServerTime) {
+      setServerTimeOffset(rawServerTime);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 

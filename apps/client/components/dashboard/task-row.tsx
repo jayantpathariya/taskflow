@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { apiClient, setServerTimeOffset } from "@/lib/api";
 import type { ITask, TaskStatus } from "@taskflow/shared";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,12 +55,17 @@ export function TaskRow({
     mutationFn: () => apiClient.post(`/tasks/${task.id}/timer/start`),
     onSuccess: (res) => {
       const timeLog = res.data?.timeLog;
+      const serverTime = res.data?.serverTime;
+      if (serverTime) {
+        setServerTimeOffset(serverTime);
+      }
       if (timeLog) {
         queryClient.setQueryData(["timer", "active"], {
           activeTimer: {
             ...timeLog,
             taskId: { id: task.id, title: task.title, status: task.status },
           },
+          serverTime,
         });
       }
       queryClient.invalidateQueries({ queryKey: ["tasks"] });

@@ -18,10 +18,12 @@ export interface ActiveTimerInfo extends Omit<ITimeLog, "taskId"> {
 
 export interface ActiveTimerResponse {
   activeTimer: ActiveTimerInfo | null;
+  serverTime?: string;
 }
 
 export interface TimeLogResponse {
   timeLog: ITimeLog;
+  serverTime?: string;
 }
 
 export interface ITimeLogItem extends Omit<ITimeLog, "taskId"> {

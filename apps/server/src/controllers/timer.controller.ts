@@ -63,7 +63,10 @@ export const startTimer = async (
     isRunning: true,
   });
 
-  res.status(status.CREATED).json({ timeLog });
+  res.status(status.CREATED).json({
+    timeLog,
+    serverTime: now.toISOString(),
+  });
 };
 
 export const stopTimer = async (
@@ -103,7 +106,10 @@ export const stopTimer = async (
     { $inc: { totalTimeSpentSeconds: elapsedSeconds } }
   );
 
-  res.status(status.OK).json({ timeLog: runningTimer });
+  res.status(status.OK).json({
+    timeLog: runningTimer,
+    serverTime: now.toISOString(),
+  });
 };
 
 export const getActiveTimer = async (
@@ -116,7 +122,10 @@ export const getActiveTimer = async (
     .sort({ startTime: -1 })
     .populate("taskId", "title status");
 
-  res.status(status.OK).json({ activeTimer });
+  res.status(status.OK).json({
+    activeTimer,
+    serverTime: new Date().toISOString(),
+  });
 };
 
 export const getTaskTimeLogs = async (
