@@ -22,7 +22,7 @@ TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 - **Real-Time Time Tracking**: 1-click timer controls with a docked status bar, tabular monospace clock (`tabular-nums`), and background synchronization.
 - **Slide-Over Task Detail Drawer**: Inspect task details, modify status, start/stop timers, and view the individual session history audit trail (`GET /api/v1/tasks/:id/time-logs`).
 - **Productivity Performance & Insights**: Daily breakdown of recorded focus time, task focus allocation, and workflow status distribution.
-- **AI Task Enhancement**: Auto-structure natural language prompts into actionable titles and descriptions using Google Gemini.
+- **AI Task Enhancement**: Auto-structure natural language prompts into actionable titles and descriptions using Google Gemini (with graceful heuristic fallback if rate-limited or slow).
 - **Toast Notifications System**: Instant visual feedback for task CRUD, status changes, timer start/stop, and error handling via Sonner.
 - **Sorting & Quick Filtering**: Filter by workflow status (*Pending*, *In Progress*, *Completed*) and sort by *Newest*, *Oldest*, or *Most Time Spent*.
 - **Dual-Token JWT Security**: Access tokens stored in HTTP-only cookies with Redis-backed refresh token rotation and session logout revocation.
@@ -36,7 +36,8 @@ TaskFlow is structured as a TypeScript monorepo using **pnpm workspaces**:
 - **API Base URL:** [https://taskflow-demm.onrender.com/api/v1](https://taskflow-demm.onrender.com/api/v1)
 
 > [!NOTE]
-> **Render Free Tier Cold Starts:** The backend is deployed on Render's free tier, which spins down after 15 minutes of inactivity. If the initial request takes ~30–50s, the instance is waking up from a cold start. Subsequent requests will be fast.
+> - **Render Free Tier Cold Starts:** The backend is deployed on Render's free tier, which spins down after 15 minutes of inactivity. If the initial request takes ~20–30s, the instance is waking up from a cold start. Subsequent requests will be fast.
+> - **Google Gemini AI Free Tier:** AI task title & description enhancement runs on the Google Gemini free tier API. Because of this, the API may occasionally be slow or hit rate limits. If rate-limited or unavailable, TaskFlow automatically returns a graceful fallback response so task generation and creation are never interrupted.
 
 ### Test Credentials
 
