@@ -15,7 +15,8 @@ import { TaskDialog } from "@/components/dashboard/task-dialog";
 import { TaskDetailSheet } from "@/components/dashboard/task-detail-sheet";
 import { ActiveTimerWidget } from "@/components/dashboard/active-timer-widget";
 import { Button } from "@/components/ui/button";
-import { Menu, Loader2, Clock } from "lucide-react";
+import { LoadingScreen } from "@/components/ui/loading-screen";
+import { Menu, Clock } from "lucide-react";
 
 interface DashboardShellProps {
   children: (props: {
@@ -90,11 +91,7 @@ export function DashboardShell({ children, pageTitle }: DashboardShellProps) {
   }, [detailTaskId, tasks]);
 
   if (isLoading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen label="Loading TaskFlow..." />;
   }
 
   const handleOpenCreate = () => {

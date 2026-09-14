@@ -19,6 +19,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { CheckCircle2, Loader2, Info } from "lucide-react";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { isAxiosError } from "axios";
 
 export default function LoginPage() {
@@ -64,11 +65,7 @@ export default function LoginPage() {
   };
 
   if (authLoading || user) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-6">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LoadingScreen className="flex-1 py-12" label="Loading..." />;
   }
 
   return (
